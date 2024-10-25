@@ -298,7 +298,7 @@ int Editor_TempObstacles::rasterizeTileLayers(
 		
 		memset(rc.triareas, 0, ntris*sizeof(unsigned char));
 		rcMarkWalkableTriangles(m_ctx, tcfg.walkableSlopeAngle,
-								verts, nverts, tris, ntris, rc.triareas);
+								verts, nverts, tris, ntris, rc.triareas, false);
 		
 		if (!rcRasterizeTriangles(m_ctx, verts, nverts, tris, rc.triareas, ntris, *rc.solid, tcfg.walkableClimb))
 			return 0;
@@ -319,7 +319,7 @@ int Editor_TempObstacles::rasterizeTileLayers(
 
 			memset(rc.triareas, 0, ntris * sizeof(unsigned char));
 			rcMarkWalkableTriangles(m_ctx, tcfg.walkableSlopeAngle,
-				verts, nverts, tris, ntris, rc.triareas);
+				verts, nverts, tris, ntris, rc.triareas, true);
 
 			if (!rcRasterizeTriangles(m_ctx, verts, nverts, tris, rc.triareas, ntris, *rc.solid, tcfg.walkableClimb))
 				return 0;

@@ -677,7 +677,7 @@ void rcCalcGridSize(const float* minBounds, const float* maxBounds, float cellSi
 /// @param[in]		minBounds	The minimum bounds of the field's AABB. [(x, y, z)] [Units: wu]
 /// @param[in]		maxBounds	The maximum bounds of the field's AABB. [(x, y, z)] [Units: wu]
 /// @param[in]		cellSize	The xy-plane cell size to use for the field. [Limit: > 0] [Units: wu]
-/// @param[in]		cellHeight	The y-axis cell size to use for field. [Limit: > 0] [Units: wu]
+/// @param[in]		cellHeight	The z-axis cell size to use for field. [Limit: > 0] [Units: wu]
 /// @returns True if the operation completed successfully.
 bool rcCreateHeightfield(rcContext* context, rcHeightfield& heightfield, int sizeX, int sizeZ,
 						 const float* minBounds, const float* maxBounds,
@@ -702,8 +702,9 @@ bool rcCreateHeightfield(rcContext* context, rcHeightfield& heightfield, int siz
 /// @param[in]		tris				The triangle vertex indices. [(vertA, vertB, vertC) * @p nt]
 /// @param[in]		numTris				The number of triangles.
 /// @param[out]		triAreaIDs			The triangle area ids. [Length: >= @p nt]
+/// @param[in]		ignoreWindingOrder	Whether to ignore the winding order of the triangle.
 void rcMarkWalkableTriangles(rcContext* context, float walkableSlopeAngle, const float* verts, int numVerts,
-							 const int* tris, int numTris, unsigned char* triAreaIDs); 
+							 const int* tris, int numTris, unsigned char* triAreaIDs, const bool ignoreWindingOrder);
 
 /// Sets the area id of all triangles with a slope greater than or equal to the specified value to #RC_NULL_AREA.
 /// 
@@ -723,8 +724,9 @@ void rcMarkWalkableTriangles(rcContext* context, float walkableSlopeAngle, const
 /// @param[in]		tris				The triangle vertex indices. [(vertA, vertB, vertC) * @p nt]
 /// @param[in]		numTris				The number of triangles.
 /// @param[out]		triAreaIDs			The triangle area ids. [Length: >= @p nt]
+/// @param[in]		ignoreWindingOrder	Whether to ignore the winding order of the triangle.
 void rcClearUnwalkableTriangles(rcContext* context, float walkableSlopeAngle, const float* verts, int numVerts,
-								const int* tris, int numTris, unsigned char* triAreaIDs); 
+								const int* tris, int numTris, unsigned char* triAreaIDs, const bool ignoreWindingOrder);
 
 /// Adds a span to the specified heightfield.
 /// 

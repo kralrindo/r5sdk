@@ -1051,7 +1051,7 @@ unsigned char* Editor_TileMesh::buildTileMesh(const int tx, const int ty, const 
 		
 		memset(m_triareas, 0, nctris*sizeof(unsigned char));
 		rcMarkWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle,
-								verts, nverts, ctris, nctris, m_triareas);
+								verts, nverts, ctris, nctris, m_triareas, false);
 		
 		if (!rcRasterizeTriangles(m_ctx, verts, nverts, ctris, m_triareas, nctris, *m_solid, m_cfg.walkableClimb))
 			return 0;
@@ -1075,7 +1075,7 @@ unsigned char* Editor_TileMesh::buildTileMesh(const int tx, const int ty, const 
 
 			memset(m_triareas, 0, nctris * sizeof(unsigned char));
 			rcMarkWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle,
-				verts, nverts, ctris, nctris, m_triareas);
+				verts, nverts, ctris, nctris, m_triareas, true);
 
 			if (!rcRasterizeTriangles(m_ctx, verts, nverts, ctris, m_triareas, nctris, *m_solid, m_cfg.walkableClimb))
 				return 0;
