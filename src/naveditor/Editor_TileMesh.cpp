@@ -966,6 +966,7 @@ unsigned char* Editor_TileMesh::buildTileMesh(const int tx, const int ty, const 
 	m_cfg.height = m_cfg.tileSize + m_cfg.borderSize*2;
 	m_cfg.detailSampleDist = m_detailSampleDist < 0.9f ? 0 : m_cellSize * m_detailSampleDist;
 	m_cfg.detailSampleMaxError = m_cellHeight * m_detailSampleMaxError;
+	m_cfg.ignoreWindingOrder = m_ignoreWindingOrder;
 	
 	// Expand the heighfield bounding box by border size to find the extents of geometry we need to build this tile.
 	//
@@ -1051,7 +1052,7 @@ unsigned char* Editor_TileMesh::buildTileMesh(const int tx, const int ty, const 
 		
 		memset(m_triareas, 0, nctris*sizeof(unsigned char));
 		rcMarkWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle,
-								verts, nverts, ctris, nctris, m_triareas, false);
+								verts, nverts, ctris, nctris, m_triareas, m_cfg.ignoreWindingOrder);
 		
 		if (!rcRasterizeTriangles(m_ctx, verts, nverts, ctris, m_triareas, nctris, *m_solid, m_cfg.walkableClimb))
 			return 0;
@@ -1075,7 +1076,7 @@ unsigned char* Editor_TileMesh::buildTileMesh(const int tx, const int ty, const 
 
 			memset(m_triareas, 0, nctris * sizeof(unsigned char));
 			rcMarkWalkableTriangles(m_ctx, m_cfg.walkableSlopeAngle,
-				verts, nverts, ctris, nctris, m_triareas, true);
+				verts, nverts, ctris, nctris, m_triareas, m_cfg.ignoreWindingOrder);
 
 			if (!rcRasterizeTriangles(m_ctx, verts, nverts, ctris, m_triareas, nctris, *m_solid, m_cfg.walkableClimb))
 				return 0;

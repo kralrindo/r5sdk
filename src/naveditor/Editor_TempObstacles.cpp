@@ -253,6 +253,8 @@ int Editor_TempObstacles::rasterizeTileLayers(
 	tcfg.bmin[1] -= tcfg.borderSize*tcfg.cs;
 	tcfg.bmax[0] += tcfg.borderSize*tcfg.cs;
 	tcfg.bmax[1] += tcfg.borderSize*tcfg.cs;
+
+	tcfg.ignoreWindingOrder = m_ignoreWindingOrder;
 	
 	// Allocate voxel heightfield where we rasterize our input data to.
 	rc.solid = rcAllocHeightfield();
@@ -298,7 +300,7 @@ int Editor_TempObstacles::rasterizeTileLayers(
 		
 		memset(rc.triareas, 0, ntris*sizeof(unsigned char));
 		rcMarkWalkableTriangles(m_ctx, tcfg.walkableSlopeAngle,
-								verts, nverts, tris, ntris, rc.triareas, false);
+								verts, nverts, tris, ntris, rc.triareas, tcfg.ignoreWindingOrder);
 		
 		if (!rcRasterizeTriangles(m_ctx, verts, nverts, tris, rc.triareas, ntris, *rc.solid, tcfg.walkableClimb))
 			return 0;
@@ -319,7 +321,7 @@ int Editor_TempObstacles::rasterizeTileLayers(
 
 			memset(rc.triareas, 0, ntris * sizeof(unsigned char));
 			rcMarkWalkableTriangles(m_ctx, tcfg.walkableSlopeAngle,
-				verts, nverts, tris, ntris, rc.triareas, true);
+				verts, nverts, tris, ntris, rc.triareas, tcfg.ignoreWindingOrder);
 
 			if (!rcRasterizeTriangles(m_ctx, verts, nverts, tris, rc.triareas, ntris, *rc.solid, tcfg.walkableClimb))
 				return 0;

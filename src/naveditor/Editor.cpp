@@ -142,6 +142,7 @@ Editor::Editor() :
 	m_navMeshDrawFlags(
 		DU_DRAW_DETOURMESH_OFFMESHCONS|DU_DRAW_DETOURMESH_WITH_CLOSED_LIST|
 		DU_DRAW_DETOURMESH_POLY_FACES|DU_DRAW_DETOURMESH_POLY_BOUNDS_OUTER|DU_DRAW_DETOURMESH_ALPHA),
+	m_ignoreWindingOrder(false),
 	m_filterLowHangingObstacles(true),
 	m_filterLedgeSpans(true),
 	m_filterWalkableLowHeightSpans(true),
@@ -331,6 +332,8 @@ void Editor::handleCommonSettings()
 		snprintf(text, 64, "Voxels: %d x %d", gw, gh);
 		ImGui::Text(text);
 	}
+
+	ImGui::Checkbox("Ignore Winding Order", &m_ignoreWindingOrder);
 	
 	ImGui::Separator();
 	ImGui::Text("Agent");
