@@ -571,6 +571,15 @@ dtPolyRef dtNavMesh::clampOffMeshVertToPoly(dtOffMeshConnection* con, dtMeshTile
 	float* polyVert = &conTile->verts[poly->verts[start?0:1]*3];
 	rdVcopy(polyVert, nearestPt);
 
+	if (start)
+	{
+		// Offset the ref position towards the new start point.
+		float offset[3];
+
+		rdVsub(offset, con->refPos, con->pos);
+		rdVadd(con->refPos, nearestPt, offset);
+	}
+
 	// Update the off-mesh connection positions as well.
 	float* conPos = &con->pos[start?0:3];
 	rdVcopy(conPos, nearestPt);
