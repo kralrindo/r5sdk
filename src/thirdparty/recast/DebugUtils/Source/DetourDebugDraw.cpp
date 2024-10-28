@@ -420,7 +420,7 @@ static void drawOffMeshConnectionRefPosition(duDebugDraw* dd, const dtOffMeshCon
 		refPosDir[0], refPosDir[1], refPosDir[2], 0.f, 10.f, duRGBA(255,255,0,255));
 }
 
-static void drawOffMeshLinks(duDebugDraw* dd, const dtNavMesh& mesh, const dtNavMeshQuery* query,
+static void drawOffMeshConnections(duDebugDraw* dd, const dtNavMesh& mesh, const dtNavMeshQuery* query,
 	const dtMeshTile* tile, const float* offset)
 {
 	const dtMeshHeader* header = tile->header;
@@ -532,7 +532,7 @@ void duDebugDrawMeshTile(duDebugDraw* dd, const dtNavMesh& mesh, const dtNavMesh
 		drawTileBounds(dd, tile, offset);
 
 	if (flags & DU_DRAW_DETOURMESH_OFFMESHCONS)
-		drawOffMeshLinks(dd, mesh, query, tile, offset);
+		drawOffMeshConnections(dd, mesh, query, tile, offset);
 
 	if (!depthTest)
 		dd->depthMask(true);
