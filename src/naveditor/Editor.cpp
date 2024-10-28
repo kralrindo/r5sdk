@@ -271,7 +271,7 @@ void Editor::resetCommonSettings()
 #endif
 
 	m_cellSize = 8.0f;
-	m_cellHeight = 6.0f;
+	m_cellHeight = 9.0f;
 	m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
 	m_traverseLinkDrawParams.cellHeight = m_cellHeight;
 
@@ -290,10 +290,10 @@ void Editor::resetCommonSettings()
 	m_regionMinSize = 4;
 	m_regionMergeSize = 20;
 	m_edgeMaxLen = 7;
-	m_edgeMaxError = 1.7f;
+	m_edgeMaxError = 1.3f;
 	m_vertsPerPoly = 6;
-	m_detailSampleDist = 16.0f;
-	m_detailSampleMaxError = 4.0f;
+	m_detailSampleDist = 4.0f;
+	m_detailSampleMaxError = 2.0f;
 	m_partitionType = EDITOR_PARTITION_WATERSHED;
 
 	initTraverseMasks();
@@ -418,7 +418,7 @@ void Editor::handleCommonSettings()
 	ImGui::Separator();
 
 	ImGui::Text("Polygonization");
-	ImGui::SliderInt("Max Edge Length", &m_edgeMaxLen, 0, 50); // todo(amos): increase due to larger scale maps?
+	ImGui::SliderInt("Max Edge Length", &m_edgeMaxLen, 0, 50);
 	ImGui::SliderFloat("Max Edge Error", &m_edgeMaxError, 0.1f, 3.0f);
 	ImGui::SliderInt("Verts Per Poly", &m_vertsPerPoly, 3, 6);
 
