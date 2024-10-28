@@ -75,7 +75,14 @@ macro( add_module MODULE_TYPE MODULE_NAME REUSE_PCH FOLDER_NAME WARNINGS_AS_ERRO
             $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/GS->
             $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/Gy>
             $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/GT>
-            $<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/fp:fast>
+            # The GDC talk regarding SIMD BVH4 collision detection held by the
+            # developers of the engine, mentions at https://gdcvault.com/play/1025126/Extreme-SIMD-Optimized-Collision-Detection
+            # on the 23:45 minute mark (or https://youtu.be/6BIfqfC1i7U?t=1429 for a direct link to the time stamp on YouTube)
+            # that fast math isn't enabled as the compiler optimizes NaN
+            # comparisons away. In order to ensure full ABI compatibility
+            # when detouring routines using any kind of math, this option
+            # should be kept disabled.
+            #$<$<AND:$<CXX_COMPILER_ID:MSVC>,$<CONFIG:Release>>:/fp:fast>
     )
     endif()
 endmacro()
