@@ -584,7 +584,13 @@ static bool polyEdgeFaceAgainst(const float* v1, const float* v2, const float* n
 // NOTE: we don't want to collide with trigger area's as this would otherwise
 // prevent a link from happening between 2 valid slabs that intersect with
 // something like a door or action trigger.
-static const int TRAVERSE_LINK_TRACE_MASK = TRACE_WORLD|TRACE_CLIP;
+// 
+// UPDATE: currently we only use door area's to mark polygons under doors, and
+// we don't want traverse links to establish between doors. The trigger mask
+// has therefore been added. The mask system needs to be reworked to take trigger
+// area flags into account and use those too, ideally with the content masks
+// provided by the engine itself.
+static const int TRAVERSE_LINK_TRACE_MASK = TRACE_WORLD|TRACE_CLIP|TRACE_TRIGGER;
 
 static bool traverseLinkOffsetIntersectsGeom(const InputGeom* geom, const float* basePos, const float* offsetPos)
 {
