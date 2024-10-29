@@ -68,19 +68,20 @@ static int s_traverseAnimTraverseFlags[TraverseAnimType_e::ANIMTYPE_COUNT];
 static void initTraverseMasks()
 {
 	s_traverseAnimTraverseFlags[ANIMTYPE_HUMAN] = 0x0000013F;
-	s_traverseAnimTraverseFlags[ANIMTYPE_SPECTRE] = 0x0000013F;
 #if DT_NAVMESH_SET_VERSION == 5
+	s_traverseAnimTraverseFlags[ANIMTYPE_SPECTRE] = 0x000BFF7E;
 	s_traverseAnimTraverseFlags[ANIMTYPE_STALKER] = 0x001BDF7F;
 	s_traverseAnimTraverseFlags[ANIMTYPE_FRAG_DRONE] = 0x001BFFFF;
 #else
+	s_traverseAnimTraverseFlags[ANIMTYPE_SPECTRE] = 0x0013FF7E;
 	s_traverseAnimTraverseFlags[ANIMTYPE_STALKER] = 0x0033DF7F;
 	s_traverseAnimTraverseFlags[ANIMTYPE_FRAG_DRONE] = 0x0033FFFF;
 #endif
-	s_traverseAnimTraverseFlags[ANIMTYPE_PILOT] = 0x0000013F;
-	s_traverseAnimTraverseFlags[ANIMTYPE_PROWLER] = 0x00033F87;
-	s_traverseAnimTraverseFlags[ANIMTYPE_SUPER_SPECTRE] = 0x00033F82;
-	s_traverseAnimTraverseFlags[ANIMTYPE_TITAN] = 0000003000;
-	s_traverseAnimTraverseFlags[ANIMTYPE_GOLIATH] = 0000003000;
+	s_traverseAnimTraverseFlags[ANIMTYPE_PILOT] = 0x0008013F;
+	s_traverseAnimTraverseFlags[ANIMTYPE_PROWLER] = 0x00033FB7;
+	s_traverseAnimTraverseFlags[ANIMTYPE_SUPER_SPECTRE] = 0x00033FB2;
+	s_traverseAnimTraverseFlags[ANIMTYPE_TITAN] = 0000000030;
+	s_traverseAnimTraverseFlags[ANIMTYPE_GOLIATH] = 0000000030; // TODO: figure out all the activities GOLIATH has.
 }
 
 TraverseType_s s_traverseTable[NUM_TRAVERSE_TYPES];
