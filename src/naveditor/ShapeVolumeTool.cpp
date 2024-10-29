@@ -199,8 +199,8 @@ void ShapeVolumeTool::handleMenu()
 	switch (m_selectedPrimitive)
 	{
 	case VOLUME_BOX:
-		ImGui::SliderFloat("Descent##ShapeVolumeCreate", &m_boxDescent, 0.1f, VALUE_ADJUST_WINDOW);
-		ImGui::SliderFloat("Ascent##ShapeVolumeCreate", &m_boxAscent, 0.1f, VALUE_ADJUST_WINDOW);
+		ImGui::SliderFloat("Descent##ShapeVolumeCreate", &m_boxDescent, m_boxDescent-(VALUE_ADJUST_WINDOW/2), m_boxDescent+(VALUE_ADJUST_WINDOW/2));
+		ImGui::SliderFloat("Ascent##ShapeVolumeCreate", &m_boxAscent, m_boxAscent-(VALUE_ADJUST_WINDOW/2), m_boxAscent+(VALUE_ADJUST_WINDOW/2));
 		break;
 	case VOLUME_CYLINDER:
 		ImGui::SliderFloat("Radius##ShapeVolumeCreate", &m_cylinderRadius, 0.1f, VALUE_ADJUST_WINDOW);
@@ -337,6 +337,7 @@ void ShapeVolumeTool::handleMenu()
 	{
 		geom->deleteShapeVolume(m_selectedVolumeIndex);
 		m_selectedVolumeIndex = -1;
+		m_copiedShapeIndex = -1;
 
 		return;
 	}
@@ -351,6 +352,9 @@ void ShapeVolumeTool::handleClick(const float* /*s*/, const float* p, const int 
 	if (shift)
 	{
 		m_selectedVolumeIndex = v;
+
+		if (v == -1)
+			m_copiedShapeIndex = -1;
 	}
 	else // Create
 	{
