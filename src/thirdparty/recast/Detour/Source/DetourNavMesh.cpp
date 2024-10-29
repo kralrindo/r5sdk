@@ -555,7 +555,7 @@ dtPolyRef dtNavMesh::clampOffMeshVertToPoly(dtOffMeshConnection* con, dtMeshTile
 	const dtMeshTile* lookupTile, const bool start)
 {
 	const float* p = start ? &con->pos[0] : &con->pos[3];
-	const float halfExtents[3] = { con->rad, con->rad, lookupTile->header->walkableClimb };
+	const float halfExtents[3] = { con->rad, con->rad, con->rad };
 
 	float nearestPt[3];
 	dtPolyRef ref = findNearestPolyInTile(lookupTile, p, halfExtents, nearestPt);
@@ -656,7 +656,7 @@ dtStatus dtNavMesh::connectOffMeshLinks(const dtTileRef tileRef)
 			return DT_FAILURE | DT_OUT_OF_MEMORY;
 
 		// connect to land points.
-		const float halfExtents[3] = { con->rad, con->rad, header->walkableClimb };
+		const float halfExtents[3] = { con->rad, con->rad, con->rad };
 		float bmin[3], bmax[3];
 		rdVsub(bmin, &con->pos[3], halfExtents);
 		rdVadd(bmax, &con->pos[3], halfExtents);
