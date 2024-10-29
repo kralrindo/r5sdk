@@ -318,8 +318,6 @@ static void setPolyGroupsTraversalReachability(int* const tableData, const int n
 
 	if (isReachable)
 		tableData[index] |= value;
-	else
-		tableData[index] &= ~value;
 }
 
 static void unionTraverseLinkedPolyGroups(const dtTraverseTableCreateParams* params, const int tableIndex)
