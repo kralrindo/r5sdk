@@ -779,9 +779,6 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 	{
 		dtPoly* const basePoly = &baseTile->polys[i];
 
-		if (basePoly->groupId == DT_UNLINKED_POLY_GROUP)
-			continue;
-
 		if (basePoly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
 			continue;
 
@@ -882,9 +879,6 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 						for (int o = 0; (o < landHeader->polyCount) && !moveToNextTile; ++o)
 						{
 							dtPoly* const landPoly = &landTile->polys[o];
-
-							if (landPoly->groupId == DT_UNLINKED_POLY_GROUP)
-								continue;
 
 							if (landPoly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
 								continue;
