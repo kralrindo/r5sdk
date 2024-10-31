@@ -285,7 +285,15 @@ void Editor::resetCommonSettings()
 	// https://developer.valvesoftware.com/wiki/Pl/Dimensions
 	m_agentMaxSlope = 45.573f;
 
-	m_traverseRayExtraOffset = 8.0f;
+	// note(amos): even though the slope-based ledge offset calculation yields
+	// very accurate results, in practice the ledge spans are sporadic causing the
+	// ray to intersect with geometry while in-game the NPC would've been able to
+	// traverse the portal perfectly without clipping into anything. To accommodate
+	// for irregularities around more complex geometry, we enforce a default offset.
+	// This extra offset is added on top of the ledge span amount which is used to
+	// calculate the total ray offset. Therefore, this won't cause links with a
+	// lower slope to clip into geometry unless this is being set very high (>40.0).
+	m_traverseRayExtraOffset = 20.0f;
 	m_traverseEdgeMinOverlap = RD_EPS;
 
 	m_regionMinSize = 4;
