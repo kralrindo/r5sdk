@@ -889,6 +889,12 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 							if (landPoly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
 								continue;
 
+							// If both polygons are sharing an edge, we should not establish the link as
+							// it will cause pathfinding to fail in this area when both polygons have
+							// their first link set to another; the path will never exit these polygons.
+							if (arePolysAdjacent(basePoly, baseTile, landPoly, landTile))
+								continue;
+
 							dtPolyDetail* const landDetail = &landTile->detailMeshes[o];
 
 							for (int p = 0; (p < landPoly->vertCount) && !moveToNextTile; ++p)
@@ -1673,8 +1679,66 @@ void dtNavMesh::getTileAndPolyByRefUnsafe(const dtPolyRef ref, const dtMeshTile*
 	*poly = &m_tiles[it].polys[ip];
 }
 
+bool dtNavMesh::arePolysAdjacent(const dtPolyRef fromRef, const dtPolyRef goalRef) const
+{
+	const dtMeshTile* fromTile = nullptr;
+	const dtMeshTile* goalTile = nullptr;
+	const dtPoly* fromPoly = nullptr;
+	const dtPoly* goalPoly = nullptr;
+
+	getTileAndPolyByRefUnsafe(fromRef, &fromTile, &fromPoly);
+	getTileAndPolyByRefUnsafe(goalRef, &goalTile, &goalPoly);
+
+	return arePolysAdjacent(fromPoly, fromTile, goalPoly, goalTile);
+}
+
+bool dtNavMesh::arePolysAdjacent(const dtPoly* const basePoly, const dtMeshTile* baseTile,
+								 const dtPoly* const landPoly, const dtMeshTile* landTile) const
+{
+	if (baseTile == landTile)
+	{
+		for (int i = 0; i < landPoly->vertCount; ++i)
+		{
+			const unsigned short nei = landPoly->neis[i];
+
+			if (!nei)
+				continue;
+
+			if (nei & DT_EXT_LINK)
+				continue;
+
+			const int idx = (nei-1);
+
+			if (&baseTile->polys[idx] == basePoly)
+				return true;
+		}
+	}
+	else // Check external linkage.
+	{
+		unsigned int linkIndex = landPoly->firstLink;
+		while (linkIndex != DT_NULL_LINK)
+		{
+			const dtLink* const link = &landTile->links[linkIndex];
+
+			if (link->side != 0xff && link->traverseType == DT_NULL_TRAVERSE_TYPE)
+			{
+				const dtMeshTile* neiTile;
+				const dtPoly* neiPoly;
+				getTileAndPolyByRefUnsafe(link->ref, &neiTile, &neiPoly);
+
+				if (neiPoly == basePoly)
+					return true;
+			}
+
+			linkIndex = link->next;
+		}
+	}
+
+	return false;
+}
+
 bool dtNavMesh::isGoalPolyReachable(const dtPolyRef fromRef, const dtPolyRef goalRef, 
-	const bool checkDisjointGroupsOnly, const int traverseTableIndex) const
+									const bool checkDisjointGroupsOnly, const int traverseTableIndex) const
 {
 	// Same poly is always reachable.
 	if (fromRef == goalRef)

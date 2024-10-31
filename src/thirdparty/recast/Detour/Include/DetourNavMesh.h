@@ -820,7 +820,22 @@ public:
 	///  @param[out]	poly	The polygon.
 	void getTileAndPolyByRefUnsafe(const dtPolyRef ref, const dtMeshTile** tile, const dtPoly** poly) const;
 
-	/// Returns whether goal poly is reachable from start poly
+	/// Returns whether both polygons are adjacent by a shared edge.
+	///  @param[in]		baseRef		The reference to the first poly.
+	///  @param[in]		landRef		The reference to the second poly.
+	/// @return True if both polygons are adjacent by a shared edge.
+	bool arePolysAdjacent(const dtPolyRef baseRef, const dtPolyRef landRef) const;
+
+	/// Returns whether both polygons are adjacent by a shared edge.
+	///  @param[in]		basePoly	The first poly.
+	///  @param[in]		baseTile	The first tile.
+	///  @param[in]		landPoly	The second poly.
+	///  @param[in]		landTile	The second tile.
+	/// @return True if both polygons are adjacent by a shared edge.
+	bool arePolysAdjacent(const dtPoly* const basePoly, const dtMeshTile* baseTile,
+		const dtPoly* const landPoly, const dtMeshTile* landTile) const;
+
+	/// Returns whether goal poly is reachable from start poly.
 	///  @param[in]		fromRef		The reference to the start poly.
 	///  @param[in]		goalRef		The reference to the goal poly.
 	///  @param[in]		checkDisjointGroupsOnly	Whether to only check disjoint poly groups.
