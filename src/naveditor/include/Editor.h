@@ -30,16 +30,16 @@
 
 struct dtMeshTile;
 
-struct hulldef
+struct NavMeshDefaults_s
 {
 	const char* name;
 	float radius;
 	float height;
 	float climbHeight;
-	int tileSize;
-	int cellResolution;
+	float cellSize;
+	int polyCellResolution;
 };
-extern const hulldef hulls[5];
+extern const NavMeshDefaults_s g_navMeshDefaults[NAVMESH_COUNT];
 
 struct TraverseType_s
 {

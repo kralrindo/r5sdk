@@ -911,13 +911,14 @@ void Editor_TileMesh::removeAllTiles()
 
 void Editor_TileMesh::buildAllHulls()
 {
-	for (const hulldef& h : hulls)
+	for (const NavMeshDefaults_s& h : g_navMeshDefaults)
 	{
 		m_agentRadius = h.radius;
 		m_agentMaxClimb = h.climbHeight;
 		m_agentHeight = h.height;
 		m_navmeshName = h.name;
-		m_tileSize = h.tileSize;
+		m_cellSize = h.cellSize;
+		m_polyCellRes = h.polyCellResolution;
 
 		m_ctx->resetLog();
 
