@@ -757,8 +757,8 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 	if (tileIndex >= m_maxTiles)
 		return DT_FAILURE | DT_OUT_OF_MEMORY;
 
-	dtMeshTile* baseTile = &m_tiles[tileIndex];
-	const dtMeshHeader* baseHeader = baseTile->header;
+	dtMeshTile* const baseTile = &m_tiles[tileIndex];
+	const dtMeshHeader* const baseHeader = baseTile->header;
 
 	if (!baseHeader)
 		return DT_FAILURE | DT_INVALID_PARAM; // Invalid tile.
@@ -824,7 +824,7 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 					float baseEdgeDir[3];
 					rdVsub(baseEdgeDir, baseDetailPolyEdgeEpos, baseDetailPolyEdgeSpos);
 
-					unsigned char baseSide = rdClassifyDirection(baseEdgeDir, baseHeader->bmin, baseHeader->bmax);
+					const unsigned char baseSide = rdClassifyDirection(baseEdgeDir, baseHeader->bmin, baseHeader->bmax);
 
 					const int MAX_NEIS = 32; // Max neighbors
 					dtMeshTile* neis[MAX_NEIS];
@@ -968,7 +968,7 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										const dtPolyRef basePolyRef = basePolyRefBase | i;
 										const dtPolyRef landPolyRef = landPolyRefBase | o;
 
-										unsigned int* linkedTraverseType = params.findPolyLink(params.userData, basePolyRef, landPolyRef);
+										unsigned int* const linkedTraverseType = params.findPolyLink(params.userData, basePolyRef, landPolyRef);
 
 										// These 2 polygons are already linked with the same traverse type.
 										if (linkedTraverseType && (rdBitCellBit(traverseType) & *linkedTraverseType))
