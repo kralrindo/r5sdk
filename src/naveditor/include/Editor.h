@@ -255,6 +255,7 @@ protected:
 	float m_agentMaxSlope;
 	float m_traverseRayExtraOffset;
 	float m_traverseEdgeMinOverlap;
+	float m_traversePortalMaxAlign;
 	int m_regionMinSize;
 	int m_regionMergeSize;
 	int m_edgeMaxLen;

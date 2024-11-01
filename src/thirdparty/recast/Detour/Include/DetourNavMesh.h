@@ -647,8 +647,8 @@ struct dtTraverseLinkConnectParams
 	///  @param[in]		userData		Pointer to user defined data.
 	///  @param[in]		lowerEdgeMid	The mid point of the lower edge from which the link starts. [(x, y, z)] [Unit: wu]
 	///  @param[in]		higherEdgeMid	The mid point of the higher edge to which the link ends. [(x, y, z)] [Unit: wu]
-	///  @param[in]		lowerEdgeDir	The vector direction of the lower edge. [(x, y, z)] [Unit: wu]
-	///  @param[in]		higherEdgeDir	The vector direction of the higher edge. [(x, y, z)] [Unit: wu]
+	///  @param[in]		lowerEdgeNorm	The edge normal of the lower edge. [(x, y, z)] [Unit: wu]
+	///  @param[in]		higherEdgeNorm	The edge normal of the higher edge. [(x, y, z)] [Unit: wu]
 	///  @param[in]		walkableRadius	The walkable radius defined by the tile hosting the link. [Unit: wu]
 	///  @param[in]		slopeAngle		The slope angle from lower to higher edge mid points. [Unit: Degrees]
 	/// @return True if the link between the lower and higher edge mid points don't collide with anything.
@@ -675,7 +675,8 @@ struct dtTraverseLinkConnectParams
 	int(*addPolyLink)(void* userData, const dtPolyRef basePolyRef, const dtPolyRef landPolyRef, const unsigned int traverseTypeBit);
 
 	void* userData;					///< The user defined data that will be provided to all callbacks, for example: your editor's class instance.
-	float minEdgeOverlap;			///< The minimum amount of projection overlap required between the 2 edges before they are considered overlapping.
+	float minEdgeOverlap;			///< The minimum amount of projection overlap required between the 2 edges before they are considered overlapping. [Unit: wu]
+	float maxPortalAlign;			///< The maximum amount of portal alignment the system will apply. [Limit: 0 >= align < 0.5]
 	bool linkToNeighbor;			///< Whether to link to polygons in neighboring tiles. Limits linkage to internal polygons if false.
 };
 

@@ -107,6 +107,47 @@ static void calcSlabEndPoints(const float* va, const float* vb, float* bmin, flo
 	}
 }
 
+static void alignPortalLimits(const float* portal1Pos, const float* portal1Norm, const float* portal2Pos,
+	const float portalTmin, const float portalTmax, float& outPortalTmin, float& outPortalTmax, const float maxAlign)
+{
+	// note(amos): if we take an extreme scenario, where:
+	// - span = portalTmax(1.0f) - portalTmin(0.99f)
+	// - shiftAmount = maxAlign(1.0f) * abs(crossZ(1.0f)) * span(0.1f)
+	// the portal will collapse as we will shift portalTmin(0.99f) with
+	// shiftAmount(0.1f)! Also, any value above 0.5 will cause too much
+	// shifting; to avoid rounding mins into maxs or the other way around
+	// during quantization, maxAlign should never be greater than 0.5.
+	rdAssert(maxAlign <= 0.5f);
+
+	float delta[3];
+	delta[0] = portal2Pos[0]-portal1Pos[0];
+	delta[1] = portal2Pos[1]-portal1Pos[1];
+	delta[2] = 0.0f;
+	rdVnormalize2D(delta);
+
+	float cross[3];
+	rdVcross(cross, delta, portal1Norm);
+
+	const float span = portalTmax-portalTmin;
+	const float shiftAmount = maxAlign * rdMathFabsf(cross[2]) * span;
+
+	if (cross[2] < 0)
+	{
+		outPortalTmin = rdMin(portalTmax, portalTmin+shiftAmount);
+		outPortalTmax = rdMin(1.0f, portalTmax+shiftAmount);
+	}
+	else if (cross[2] > 0)
+	{
+		outPortalTmin = rdMax(0.0f, portalTmin-shiftAmount);
+		outPortalTmax = rdMax(portalTmin, portalTmax-shiftAmount);
+	}
+	else
+	{
+		outPortalTmin = portalTmin;
+		outPortalTmax = portalTmax;
+	}
+}
+
 inline int computeTileHash(int x, int y, const int mask)
 {
 	const unsigned int h1 = 0x8da6b343; // Large multiplicative constants;
@@ -824,6 +865,9 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 					float baseEdgeDir[3];
 					rdVsub(baseEdgeDir, baseDetailPolyEdgeEpos, baseDetailPolyEdgeSpos);
 
+					float baseEdgeNorm[3];
+					rdCalcEdgeNormal2D(baseEdgeDir, baseEdgeNorm);
+
 					const unsigned char baseSide = rdClassifyDirection(baseEdgeDir, baseHeader->bmin, baseHeader->bmax);
 
 					const int MAX_NEIS = 32; // Max neighbors
@@ -955,6 +999,9 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										float landEdgeDir[3];
 										rdVsub(landEdgeDir, landDetailPolyEdgeEpos, landDetailPolyEdgeSpos);
 
+										float landEdgeNorm[3];
+										rdCalcEdgeNormal2D(landEdgeDir, landEdgeNorm);
+
 										const float elevation = rdMathFabsf(basePolyEdgeMid[2] - landPolyEdgeMid[2]);
 										const float slopeAngle = rdMathFabsf(rdCalcSlopeAngle(basePolyEdgeMid, landPolyEdgeMid));
 										const bool baseOverlaps = rdCalcEdgeOverlap2D(baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, landDetailPolyEdgeSpos, landDetailPolyEdgeEpos, baseEdgeDir) > params.minEdgeOverlap;
@@ -977,17 +1024,25 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										const bool basePolyHigher = basePolyEdgeMid[2] > landPolyEdgeMid[2];
 										const float* const lowerEdgeMid = basePolyHigher ? landPolyEdgeMid : basePolyEdgeMid;
 										const float* const higherEdgeMid = basePolyHigher ? basePolyEdgeMid : landPolyEdgeMid;
-										const float* const lowerEdgeDir = basePolyHigher ? landEdgeDir : baseEdgeDir;
-										const float* const higherEdgeDir = basePolyHigher ? baseEdgeDir : landEdgeDir;
+										const float* const lowerEdgeNorm = basePolyHigher ? landEdgeNorm : baseEdgeNorm;
+										const float* const higherEdgeNorm = basePolyHigher ? baseEdgeNorm : landEdgeNorm;
 
 										const float walkableRadius = basePolyHigher ? baseHeader->walkableRadius : landHeader->walkableRadius;
 
-										if (!params.traverseLinkInLOS(params.userData, lowerEdgeMid, higherEdgeMid, lowerEdgeDir, higherEdgeDir, walkableRadius, slopeAngle))
+										if (!params.traverseLinkInLOS(params.userData, lowerEdgeMid, higherEdgeMid, lowerEdgeNorm, higherEdgeNorm, walkableRadius, slopeAngle))
 											continue;
 
 										const unsigned char landSide = params.linkToNeighbor
 											? rdClassifyPointOutsideBounds(landPolyEdgeMid, landHeader->bmin, landHeader->bmax)
 											: rdClassifyPointInsideBounds(landPolyEdgeMid, landHeader->bmin, landHeader->bmax);
+
+										float newBaseTmin;
+										float newBaseTmax;
+										alignPortalLimits(basePolyEdgeMid, baseEdgeNorm, landPolyEdgeMid, baseTmin, baseTmax, newBaseTmin, newBaseTmax, params.maxPortalAlign);
+
+										float newLandTmin;
+										float newLandTmax;
+										alignPortalLimits(landPolyEdgeMid, landEdgeNorm, basePolyEdgeMid, landTmin, landTmax, newLandTmin, newLandTmax, params.maxPortalAlign);
 
 										const unsigned int forwardIdx = baseTile->allocLink();
 										const unsigned int reverseIdx = landTile->allocLink();
@@ -1003,8 +1058,8 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										forwardLink->ref = landPolyRef;
 										forwardLink->edge = (unsigned char)j;
 										forwardLink->side = landSide;
-										forwardLink->bmin = (unsigned char)rdMathRoundf(baseTmin*255.f);
-										forwardLink->bmax = (unsigned char)rdMathRoundf(baseTmax*255.f);
+										forwardLink->bmin = (unsigned char)rdMathRoundf(newBaseTmin*255.f);
+										forwardLink->bmax = (unsigned char)rdMathRoundf(newBaseTmax*255.f);
 										forwardLink->next = basePoly->firstLink;
 										basePoly->firstLink = forwardIdx;
 										forwardLink->traverseType = (unsigned char)traverseType;
@@ -1016,8 +1071,8 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										reverseLink->ref = basePolyRef;
 										reverseLink->edge = (unsigned char)p;
 										reverseLink->side = baseSide;
-										reverseLink->bmin = (unsigned char)rdMathRoundf(landTmin*255.f);
-										reverseLink->bmax = (unsigned char)rdMathRoundf(landTmax*255.f);
+										reverseLink->bmin = (unsigned char)rdMathRoundf(newLandTmin*255.f);
+										reverseLink->bmax = (unsigned char)rdMathRoundf(newLandTmax*255.f);
 										reverseLink->next = landPoly->firstLink;
 										landPoly->firstLink = reverseIdx;
 										reverseLink->traverseType = (unsigned char)traverseType;

@@ -295,6 +295,7 @@ void Editor::resetCommonSettings()
 	// lower slope to clip into geometry unless this is being set very high (>40.0).
 	m_traverseRayExtraOffset = 20.0f;
 	m_traverseEdgeMinOverlap = RD_EPS;
+	m_traversePortalMaxAlign = 0.5f;
 
 	m_regionMinSize = 4;
 	m_regionMergeSize = 20;
@@ -457,6 +458,8 @@ void Editor::handleCommonSettings()
 		m_traverseLinkDrawParams.extraOffset = m_traverseRayExtraOffset;
 
 	ImGui::SliderFloat("Min Overlap", &m_traverseEdgeMinOverlap, 0.0f, m_tileSize*m_cellSize, "%g");
+
+	ImGui::SliderFloat("Max Align", &m_traversePortalMaxAlign, 0.0f, 0.5f, "%g", ImGuiSliderFlags_AlwaysClamp);
 
 	if (ImGui::Button("Rebuild Static Pathing Data"))
 		createStaticPathingData();
@@ -629,8 +632,8 @@ static bool traverseLinkOffsetIntersectsGeom(const InputGeom* geom, const float*
 	return false;
 }
 
-static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* highPos, const float* lowDir,
-	const float* highDir, const float walkableRadius, const float slopeAngle)
+static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* highPos, const float* lowNorm,
+	const float* highNorm, const float walkableRadius, const float slopeAngle)
 {
 	Editor* editor = (Editor*)userData;
 	InputGeom* geom = editor->getInputGeom();
@@ -648,12 +651,6 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 	}
 	else
 		offsetAmount = walkableRadius + extraOffset;
-
-	float lowNormal[3];
-	rdCalcEdgeNormal2D(lowDir, lowNormal);
-
-	float highNormal[3];
-	rdCalcEdgeNormal2D(highDir, highNormal);
 
 	// Detect overhangs to avoid links like these:
 	// 
@@ -678,7 +675,7 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 	// The AI would otherwise attempt to initiate
 	// the jump from the lower navmesh, causing it
 	// to clip through geometry.
-	if (!polyEdgeFaceAgainst(lowPos, highPos, lowNormal, highNormal))
+	if (!polyEdgeFaceAgainst(lowPos, highPos, lowNorm, highNorm))
 		return false;
 
 	const float* targetRayPos = highPos;
@@ -715,8 +712,8 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 
 	if (hasOffset)
 	{
-		offsetRayPos[0] = highPos[0] + highNormal[0] * offsetAmount;
-		offsetRayPos[1] = highPos[1] + highNormal[1] * offsetAmount;
+		offsetRayPos[0] = highPos[0] + highNorm[0] * offsetAmount;
+		offsetRayPos[1] = highPos[1] + highNorm[1] * offsetAmount;
 		offsetRayPos[2] = highPos[2];
 
 		if (traverseLinkOffsetIntersectsGeom(geom, highPos, offsetRayPos))
@@ -787,6 +784,7 @@ void Editor::createTraverseLinkParams(dtTraverseLinkConnectParams& params)
 
 	params.userData = this;
 	params.minEdgeOverlap = m_traverseEdgeMinOverlap;
+	params.maxPortalAlign = m_traversePortalMaxAlign;
 }
 
 bool Editor::createTraverseLinks()
