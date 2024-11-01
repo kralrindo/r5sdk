@@ -173,7 +173,7 @@ static void drawPolyBoundaries(duDebugDraw* dd, const dtMeshTile* tile,
 						c = isLinked ? duRGBA(255,0,0,255) : duRGBA(0,0,255,255);
 				}
 				else
-					c = duRGBA(0,48,64,32);
+					c = isLinked ? duRGBA(0,48,64,32) : duRGBA(24,48,0,32);
 			}
 			else
 			{
