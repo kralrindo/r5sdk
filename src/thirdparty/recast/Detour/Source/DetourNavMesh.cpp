@@ -128,18 +128,21 @@ static void alignPortalLimits(const float* portal1Pos, const float* portal1Norm,
 	float cross[3];
 	rdVcross(cross, delta, portal1Norm);
 
-	const float span = portalTmax-portalTmin;
-	const float shiftAmount = maxAlign * rdMathFabsf(cross[2]) * span;
+	if (maxAlign > 0 && (cross[2] < 0 || cross[2] > 0))
+	{
+		const float span = portalTmax-portalTmin;
+		const float shiftAmount = maxAlign*rdMathFabsf(cross[2]) * span;
 
-	if (cross[2] < 0)
-	{
-		outPortalTmin = rdMin(portalTmax, portalTmin+shiftAmount);
-		outPortalTmax = rdMin(1.0f, portalTmax+shiftAmount);
-	}
-	else if (cross[2] > 0)
-	{
-		outPortalTmin = rdMax(0.0f, portalTmin-shiftAmount);
-		outPortalTmax = rdMax(portalTmin, portalTmax-shiftAmount);
+		if (cross[2] < 0)
+		{
+			outPortalTmin = rdMin(portalTmax, portalTmin+shiftAmount);
+			outPortalTmax = rdMin(1.0f, portalTmax+shiftAmount);
+		}
+		else // On right side.
+		{
+			outPortalTmin = rdMax(0.0f, portalTmin-shiftAmount);
+			outPortalTmax = rdMax(portalTmin, portalTmax-shiftAmount);
+		}
 	}
 	else
 	{
