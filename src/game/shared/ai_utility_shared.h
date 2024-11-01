@@ -23,7 +23,7 @@ public:
 		const Vector3D& vCameraPos,
 		const int iNodeIndex,
 		const float flCameraRange,
-		const bool bUseDepthBuffer) const;
+		const bool bDepthBuffer) const;
 
 	void DrawNavMeshBVTree(const dtNavMesh* mesh,
 		const Vector3D& vCameraPos,
@@ -31,20 +31,12 @@ public:
 		const int iBVTreeIndex,
 		const float flCameraRange,
 		const int nTileRange,
-		const bool bUseDepthBuffer) const;
+		const bool bDepthBuffer) const;
 
 	void DrawNavMeshPortals(const dtNavMesh* mesh,
 		const Vector3D& vCameraPos,
 		const VPlane& vCullPlane,
 		const int iPortalIndex,
-		const float flCameraRange,
-		const int nTileRange,
-		const bool bUseDepthBuffer) const;
-
-	void DrawNavMeshPolys(const dtNavMesh* mesh,
-		const Vector3D& vCameraPos,
-		const VPlane& vCullPlane,
-		const int iPolyIndex,
 		const float flCameraRange,
 		const int nTileRange,
 		const bool bDepthBuffer) const;
@@ -55,6 +47,8 @@ public:
 		const int iBoundaryIndex,
 		const float flCameraRange,
 		const int nTileRange,
+		const bool bDrawInner,
+		const bool bDrawDetail,
 		const bool bDepthBuffer) const;
 
 	shortx8 PackNodeLink(int32_t a, int32_t b, int32_t c = 0, int32_t d = 0) const;
