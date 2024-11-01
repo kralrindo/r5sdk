@@ -218,7 +218,7 @@ void OffMeshConnectionTool::handleMenu()
 	ImGui::Checkbox("Invert Lookup Order##OffMeshConnectionCreate", &m_invertVertexLookupOrder);
 
 	ImGui::PushItemWidth(140);
-	ImGui::SliderInt("Jump##OffMeshConnectionCreate", &m_traverseType, 0, DT_MAX_TRAVERSE_TYPES-1, "%d", ImGuiSliderFlags_NoInput);
+	ImGui::SliderInt("Jump##OffMeshConnectionCreate", &m_traverseType, 0, DT_MAX_TRAVERSE_TYPES-1, "%d", ImGuiSliderFlags_AlwaysClamp);
 	ImGui::SliderFloat("Radius##OffMeshConnectionCreate", &m_radius, 0, 512);
 	ImGui::PopItemWidth();
 
