@@ -273,8 +273,6 @@ void Editor::resetCommonSettings()
 	m_tileSize = 64;
 	m_cellSize = 8.0f;
 	m_cellHeight = 9.0f;
-	m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
-	m_traverseLinkDrawParams.cellHeight = m_cellHeight;
 
 	// todo(amos): check if this applies for all hulls, and check if this is the
 	// actual value used by the game. This seems to generate slopes very close
@@ -305,6 +303,10 @@ void Editor::resetCommonSettings()
 	m_detailSampleDist = 4.0f;
 	m_detailSampleMaxError = 2.0f;
 	m_partitionType = EDITOR_PARTITION_WATERSHED;
+
+	m_traverseLinkDrawParams.cellHeight = m_cellHeight;
+	m_traverseLinkDrawParams.extraOffset = m_traverseRayExtraOffset;
+	m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
 
 	initTraverseMasks();
 	initTraverseTableParams();
