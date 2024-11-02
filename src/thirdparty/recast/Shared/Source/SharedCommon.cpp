@@ -237,24 +237,35 @@ bool rdIntersectSegmentCylinder(const float* sp, const float* sq, const float* p
 	const float a = dx*dx + dy*dy;
 	const float b = 2.0f * (px*dx + py*dy);
 	const float c = px*px + py*py - radius*radius;
-	
-	// Discriminant for solving quadratic equation
-	float disc = b*b - 4.0f * a*c;
 
-	if (disc < 0.0f)
-		return false; // No intersection in the horizontal plane
+	if (a > 0.0f)
+	{
+		// Discriminant for solving quadratic equation
+		float disc = b*b - 4.0f * a*c;
 
-	disc = rdMathSqrtf(disc);
-	float t0 = (-b-disc) / (2.0f*a);
-	float t1 = (-b+disc) / (2.0f*a);
+		if (disc < RD_EPS)
+			return false; // No intersection in the horizontal plane
 
-	if (t0 > t1) rdSwap(t0, t1);
+		disc = rdMathSqrtf(disc);
+		float t0 = (-b-disc) / (2.0f*a);
+		float t1 = (-b+disc) / (2.0f*a);
 
-	tmin = rdMax(tmin, t0);
-	tmax = rdMin(tmax, t1);
+		if (t0 > t1) rdSwap(t0, t1);
 
-	if (tmin > tmax)
-		return false; // No intersection in the [tmin, tmax] range
+		tmin = rdMax(tmin, t0);
+		tmax = rdMin(tmax, t1);
+
+		if (tmin > tmax)
+			return false; // No intersection in the [tmin, tmax] range
+	}
+	else
+	{
+		// There is no shift in the start and end point on the x-y plane,
+		// ensure the starting point is within the radius of the cylinder
+		// before checking for vertical intersection
+		if (px*px + py*py > radius*radius) 
+			return false;
+	}
 
 	// Vertical (z-axis) intersection test
 	const float dz = sq[2]-sp[2];
