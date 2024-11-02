@@ -649,11 +649,12 @@ struct dtTraverseLinkConnectParams
 	///  @param[in]		higherEdgeMid	The mid point of the higher edge to which the link ends. [(x, y, z)] [Unit: wu]
 	///  @param[in]		lowerEdgeNorm	The edge normal of the lower edge. [(x, y, z)] [Unit: wu]
 	///  @param[in]		higherEdgeNorm	The edge normal of the higher edge. [(x, y, z)] [Unit: wu]
+	///  @param[in]		walkableHeight	The walkable height defined by the tile hosting the link. [Unit: wu]
 	///  @param[in]		walkableRadius	The walkable radius defined by the tile hosting the link. [Unit: wu]
 	///  @param[in]		slopeAngle		The slope angle from lower to higher edge mid points. [Unit: Degrees]
 	/// @return True if the link between the lower and higher edge mid points don't collide with anything.
-	bool(*traverseLinkInLOS)(void* userData, const float* lowerEdgeMid, const float* higherEdgeMid,
-		const float* lowerEdgeDir, const float* higherEdgeDir, const float walkableRadius, const float slopeAngle);
+	bool(*traverseLinkInLOS)(void* userData, const float* lowerEdgeMid, const float* higherEdgeMid, const float* lowerEdgeNorm,
+		const float* higherEdgeNorm, const float walkableHeight, const float walkableRadius, const float slopeAngle);
 
 	/// User defined callback that looks if a link between these 2 polygons
 	/// have already been established. A traverse type can only be used once

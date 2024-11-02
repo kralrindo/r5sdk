@@ -291,7 +291,7 @@ void Editor::resetCommonSettings()
 	// This extra offset is added on top of the ledge span amount which is used to
 	// calculate the total ray offset. Therefore, this won't cause links with a
 	// lower slope to clip into geometry unless this is being set very high (>40.0).
-	m_traverseRayExtraOffset = 20.0f;
+	m_traverseRayExtraOffset = 4.0f;
 	m_traverseEdgeMinOverlap = RD_EPS;
 	m_traversePortalMaxAlign = 0.5f;
 
@@ -305,7 +305,7 @@ void Editor::resetCommonSettings()
 	m_partitionType = EDITOR_PARTITION_WATERSHED;
 
 	m_traverseLinkDrawParams.cellHeight = m_cellHeight;
-	m_traverseLinkDrawParams.extraOffset = m_traverseRayExtraOffset;
+	m_traverseLinkDrawParams.extraOffset = (m_agentRadius*2)+m_traverseRayExtraOffset;
 	m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
 
 	initTraverseMasks();
@@ -350,7 +350,8 @@ void Editor::handleCommonSettings()
 	ImGui::Separator();
 	ImGui::Text("Agent");
 	ImGui::SliderFloat("Height", &m_agentHeight, 0.1f, 500.0f);
-	ImGui::SliderFloat("Radius", &m_agentRadius, 0.0f, 500.0f);
+	if (ImGui::SliderFloat("Radius", &m_agentRadius, 0.0f, 500.0f))
+		m_traverseLinkDrawParams.extraOffset = (m_agentRadius*2) + m_traverseRayExtraOffset;
 	ImGui::SliderFloat("Max Climb", &m_agentMaxClimb, 0.1f, 250.0f);
 	ImGui::SliderFloat("Max Slope", &m_agentMaxSlope, 0.0f, 90.0f);
 
@@ -457,7 +458,7 @@ void Editor::handleCommonSettings()
 		m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
 
 	if (ImGui::SliderFloat("Extra Offset", &m_traverseRayExtraOffset, 0, 128))
-		m_traverseLinkDrawParams.extraOffset = m_traverseRayExtraOffset;
+		m_traverseLinkDrawParams.extraOffset = (m_agentRadius*2) + m_traverseRayExtraOffset;
 
 	ImGui::SliderFloat("Min Overlap", &m_traverseEdgeMinOverlap, 0.0f, m_tileSize*m_cellSize, "%g");
 
@@ -605,6 +606,11 @@ static bool polyEdgeFaceAgainst(const float* v1, const float* v2, const float* n
 // provided by the engine itself.
 static const int TRAVERSE_LINK_TRACE_MASK = TRACE_WORLD|TRACE_CLIP|TRACE_TRIGGER;
 
+// Links smaller than this do not need 3 rays casted upwards over the span of
+// the link to detect overhanging objects. Since there are many small links,
+// avoiding 2 additional ray casts will save a lot on build times.
+static const float TRAVERSE_LINK_TRIPPLE_TRACE_THRESH = 100.f;
+
 static bool traverseLinkOffsetIntersectsGeom(const InputGeom* geom, const float* basePos, const float* offsetPos)
 {
 	// We need to fire a raycast from out initial
@@ -627,15 +633,117 @@ static bool traverseLinkOffsetIntersectsGeom(const InputGeom* geom, const float*
 	// Otherwise we create links between a mesh
 	// inside and outside an object, causing the
 	// ai to traverse inside of it.
-	if (geom->raycastMesh(basePos, offsetPos, TRAVERSE_LINK_TRACE_MASK) ||
-		geom->raycastMesh(offsetPos, basePos, TRAVERSE_LINK_TRACE_MASK))
+	if (geom->raycastMesh(basePos, offsetPos, TRAVERSE_LINK_TRACE_MASK))
 		return true;
 
 	return false;
 }
 
+static bool traverseLinkIntersectsPlaneOverPlane(const InputGeom* geom, const float* lowPos, const float* highPos, const float walkableHeight)
+{
+	// Make sure we have at least a clearance of
+	// the tile's walkable height in order to
+	// prevent links like these:
+	// 
+	//                  object geom
+	//                  ^
+	//   navmesh        |
+	//   ^              |
+	//   |   !-------------------------!
+	//   |   !    clearance trace      !    traverse link
+	//   |   !    ^       ^       ^    !   /
+	//   |   !    |       |       |    !  /
+	//   |   -----|-------|-------|----- /
+	// ++++ *---------------------------* ++++
+	// ========================================...
+	// 
+	// Otherwise the NPC will traverse through
+	// objects or geometry which have a very
+	// slight elevation creating a gap. The
+	// outer clearance traces are only performed
+	// if the link is larger than
+	// TRAVERSE_LINK_TRIPPLE_TRACE_MIN_DIST.
+	// A classic example in which such link
+	// could establish is if we have a box on a
+	// forklift that is slightly elevated; too
+	// low for the hull's walkable height but
+	// high enough for a ray to reach the other
+	// side of the navmesh unobstructed.
+
+	float rayMidStart[3];
+	rdVsad(rayMidStart, lowPos, highPos, 0.5f);
+
+	float rayMidEnd[3];
+	rdVset(rayMidEnd, rayMidStart[0], rayMidStart[1], rayMidStart[2]+walkableHeight);
+
+	if (geom->raycastMesh(rayMidStart, rayMidEnd, TRAVERSE_LINK_TRACE_MASK))
+		return true;
+
+	const float distance = rdVdist(lowPos, highPos);
+
+	if (distance < TRAVERSE_LINK_TRIPPLE_TRACE_THRESH)
+		return false;
+
+	float rayMidMidStart[3];
+
+	rdVsad(rayMidMidStart, rayMidStart, lowPos, 0.5f);
+	rdVset(rayMidEnd, rayMidMidStart[0], rayMidMidStart[1], rayMidMidStart[2]+walkableHeight);
+
+	if (geom->raycastMesh(rayMidStart, rayMidEnd, TRAVERSE_LINK_TRACE_MASK))
+		return true;
+
+	rdVsad(rayMidMidStart, rayMidStart, highPos, 0.5f);
+	rdVset(rayMidEnd, rayMidMidStart[0], rayMidMidStart[1], rayMidMidStart[2]+walkableHeight);
+
+	if (geom->raycastMesh(rayMidStart, rayMidEnd, TRAVERSE_LINK_TRACE_MASK))
+		return true;
+
+	return false;
+}
+
+static bool traverseLinkIntersectsOverhangOverPoint(const InputGeom* geom, const float* startPos, const float walkableHeight)
+{
+	// Make sure we have enough clearance over
+	// the kink of the link. The kink is formed
+	// at a distance of walkableRadius from the
+	// ledge, which is ultimately where the NPC
+	// will be during the traversal of the link.
+	// We have to make sure that when the NPC is
+	// at this kink, that it does not clip into
+	// overhanging geometry as shown below:
+	// 
+	// -----------------!
+	// clearance ray    ! --> overhanging object
+	//             ^    !
+	//             |    !          upper navmesh
+	// ------------|----!          ^
+	//             |               |
+	//             |               |
+	// kink <----- *--------* +++++++++++++++++
+	//             |      !--------------------
+	//             |      !
+	// link <----- |      !
+	//             |      !
+	//             |      !
+	//             |      !
+	//  ++++++++++ *      !
+	// ========================================...
+
+	// note(amos): walkableHeight*2 because some traverse animations
+	// will make the NPC extend well beyond their walkable height on
+	// the kind point of the traverse portal. We need to accommodate
+	// for these to avoid them clipping into geometry.
+	const float minClearanceHeight[3] = {
+		startPos[0],
+		startPos[1],
+		startPos[2] + (walkableHeight*2)
+	};
+
+	return geom->raycastMesh(minClearanceHeight, startPos, TRAVERSE_LINK_TRACE_MASK);
+}
+
 static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* highPos, const float* lowNorm,
-	const float* highNorm, const float walkableRadius, const float slopeAngle)
+	const float* highNorm, const float walkableHeight, const float walkableRadius, const float slopeAngle)
 {
 	Editor* editor = (Editor*)userData;
 	InputGeom* geom = editor->getInputGeom();
@@ -646,7 +754,13 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 
 	if (editor->useDynamicTraverseRayOffset())
 	{
-		const float totLedgeSpan = walkableRadius + extraOffset;
+		// note(amos): walkableRadius*2 because the theoretical
+		// distance between the poly edge and the center point
+		// of the hull is twice the walkable radius, we have to
+		// take this into account so our kink point moves over
+		// the geometry ledge. The extra offset will account for
+		// small irregularities in ledge spans.
+		const float totLedgeSpan = (walkableRadius*2) + extraOffset;
 		const float maxAngle = rdCalcMaxLOSAngle(totLedgeSpan, cellHeight);
 
 		offsetAmount = rdCalcLedgeSpanOffsetAmount(totLedgeSpan, slopeAngle, maxAngle);
@@ -656,11 +770,11 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 
 	// Detect overhangs to avoid links like these:
 	// 
-	//        geom             upper navmesh
-	//    gap ^                ^
-	//    ^   |                |
-	//    |   |                |
-	//  <---> | +++++++++++++++++++++++++++++++...
+	//         geom             upper navmesh
+	//     gap ^                ^
+	//     ^   |                |
+	//     |   |                |
+	// * <---> | ++++++++++++++++++++++++++++++...
 	//  \======================================...
 	//   \        |
 	//    \       |
@@ -670,7 +784,7 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 	//        \-----> link
 	//     gap \               lower navmesh
 	//       ^  \              ^
-	//       |   \             |
+	//       |   *             |
 	//     <----> +++++++++++++++++++++++++++++...
 	//     ====================================...
 	// 
@@ -681,7 +795,6 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 		return false;
 
 	const float* targetRayPos = highPos;
-	const bool hasOffset = offsetAmount > 0;
 
 	// We offset the highest point with at least the
 	// walkable radius, and perform a raycast test
@@ -696,12 +809,12 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 	//                     ^    |       |
 	//                     |    |       |
 	//           offset <-----> | +++++++++++++...
-	//                / =======================...
+	//                * =======================...
 	//               /
 	//     ray <----/     lower navmesh
 	//             /      ^
 	//     geom   /       |
-	//     ^     /        |
+	//     ^     *        |
 	//     |    +++++++++++++++++++++++++++++++...
 	// ========================================...
 	// 
@@ -712,7 +825,7 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 	// between the 2 positions.
 	float offsetRayPos[3];
 
-	if (hasOffset)
+	if (offsetAmount > 0)
 	{
 		offsetRayPos[0] = highPos[0] + highNorm[0] * offsetAmount;
 		offsetRayPos[1] = highPos[1] + highNorm[1] * offsetAmount;
@@ -724,22 +837,28 @@ static bool traverseLinkInLOS(void* userData, const float* lowPos, const float* 
 		targetRayPos = offsetRayPos;
 	}
 
-	// note(amos): perform 2 raycasts as we have to take the
-	// face normal into account. Path must be clear from both
-	// directions. We cast from the upper position first as
-	// an optimization attempt because if there's a ledge, the
-	// raycast test from the lower pos is more likely to pass
-	// due to mesh normals, e.g. when the higher mesh is generated
-	// on a single sided plane, and we have a ledge between our
-	// lower and higher pos, the test from below will pass while
-	// the test from above won't. Doing the test from below won't
-	// matter besides burning CPU time as we will never get here if
-	// the mesh normals of that plane were flipped as there
-	// won't be any navmesh on the higher pos in the first place.
-	// Its still possible there's something blocking on the lower
-	// pos' side, but this is a lot less likely to happen.
-	if (geom->raycastMesh(targetRayPos, lowPos, TRAVERSE_LINK_TRACE_MASK) ||
-		geom->raycastMesh(lowPos, targetRayPos, TRAVERSE_LINK_TRACE_MASK))
+	// Check if the path between the ground position and the kink point
+	// is clear.
+	if (geom->raycastMesh(targetRayPos, lowPos, TRAVERSE_LINK_TRACE_MASK))
+		return false;
+
+	const float angle = rdCalcSlopeAngle(lowPos, highPos);
+	const float maxAngle = editor->getAgentSlope();
+
+	// Only perform this test if the link runs over a possible walkable surface.
+	if (angle < maxAngle)
+	{
+		// Check if we don't traverse through a hole in geometry that has an
+		// overhanging object.
+		if (traverseLinkIntersectsPlaneOverPlane(geom, lowPos, targetRayPos, walkableHeight))
+			return false;
+	}
+
+	// Check if the clearance between our portal points and the potential
+	// ceiling is large enough. Check highPos first as we are more likely
+	// to intersect from here.
+	if (traverseLinkIntersectsOverhangOverPoint(geom, targetRayPos, walkableHeight) ||
+		traverseLinkIntersectsOverhangOverPoint(geom, lowPos, walkableHeight))
 		return false;
 
 	return true;
