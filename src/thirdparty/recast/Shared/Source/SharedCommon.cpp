@@ -125,8 +125,6 @@ bool rdIntersectSegmentPoly2D(const float* p0, const float* p1,
 							  float& tmin, float& tmax,
 							  int& segMin, int& segMax)
 {
-	static const float EPS = 0.000001f;
-	
 	tmin = 0;
 	tmax = 1;
 	segMin = -1;
@@ -142,7 +140,7 @@ bool rdIntersectSegmentPoly2D(const float* p0, const float* p1,
 		rdVsub(diff, p0, &verts[j*3]);
 		const float n = rdVperp2D(edge, diff);
 		const float d = rdVperp2D(dir, edge);
-		if (rdMathFabsf(d) < EPS)
+		if (rdMathFabsf(d) < RD_EPS)
 		{
 			// S is nearly parallel to this edge
 			if (n < 0)
