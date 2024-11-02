@@ -187,7 +187,7 @@ public:
 				char* pEnd = nullptr;
 				m_markedPolyRef = (dtPolyRef)STR_TO_ID(m_polyRefTextInput, &pEnd, 10);
 			}
-			ImGui::SliderInt("Tile Side", &m_selectedSide, -1, 8, "%d", ImGuiSliderFlags_NoInput);
+			ImGui::SliderInt("Tile Side", &m_selectedSide, -1, 7, "%d", ImGuiSliderFlags_NoInput);
 			ImGui::PopItemWidth();
 		}
 
