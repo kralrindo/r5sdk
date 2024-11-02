@@ -261,7 +261,7 @@ bool rdIntersectSegmentCylinder(const float* sp, const float* sq, const float* p
 	// Vertical (z-axis) intersection test
 	const float dz = sq[2]-sp[2];
 
-	if (dz != 0.0f)
+	if (rdMathFabsf(dz) > RD_EPS)
 	{
 		float tCapMin = (cz-sp[2]) / dz;
 		float tCapMax = (topZ-sp[2]) / dz;
@@ -303,7 +303,7 @@ bool rdIntersectSegmentConvexHull(const float* sp, const float* sq,
 	// Vertical (z-axis) intersection test
 	const float dz = sq[2]-sp[2];
 
-	if (dz != 0.0f)
+	if (rdMathFabsf(dz) > RD_EPS)
 	{
 		float tCapMin = (hmin-sp[2]) / dz;
 		float tCapMax = (hmax-sp[2]) / dz;
