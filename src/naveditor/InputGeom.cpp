@@ -31,7 +31,6 @@ static inline bool intersectSegmentTriangle(const float* sp, const float* sq,
 									 const float* a, const float* b, const float* c,
 									 float &t, const bool delayedDiv)
 {
-	float v, w;
 	float ab[3], ac[3], qp[3], ap[3], norm[3], e[3];
 	rdVsub(ab, b, a);
 	rdVsub(ac, c, a);
@@ -41,26 +40,40 @@ static inline bool intersectSegmentTriangle(const float* sp, const float* sq,
 	// intersecting multiple segments against the same triangle
 	rdVcross(norm, ab, ac);
 	
-	// Compute denominator d. If d <= 0, segment is parallel to or points
+	// Compute denominator d. If abs(d) < EPS, segment is parallel to or points
 	// away from triangle, so exit early
-	float d = rdVdot(qp, norm);
-	if (d <= 0.0f) return false;
+	const float d = rdVdot(qp, norm);
+	if (rdMathFabsf(d) < RD_EPS) return false;
 	
 	// Compute intersection t value of pq with plane of triangle. A ray
 	// intersects if 0 <= t. Segment intersects if 0 <= t <= 1. Delay
 	// dividing by d until intersection has been found to pierce triangle
 	rdVsub(ap, sp, a);
 	t = rdVdot(ap, norm);
-	if (t < 0.0f) return false;
-	if (t > d) return false; // For segment; exclude this code line for a ray test
-	
+
+	const bool frontFace = (d > 0.0f);
+
+	// For segment; exclude the 't > d' and 't < d' code line for a ray test
+	if (rdLikely(frontFace))
+		{ if (t < 0.0f || t > d) return false; }
+	else
+		{ if (t > 0.0f || t < d) return false; }
+
 	// Compute barycentric coordinate components and test if within bounds
 	rdVcross(e, qp, ap);
-	v = rdVdot(ac, e);
-	if (v < 0.0f || v > d) return false;
-	w = -rdVdot(ab, e);
-	if (w < 0.0f || v + w > d) return false;
-	
+	const float v = rdVdot(ac, e);
+	if (rdLikely(frontFace))
+		{ if (v < 0.0f || v > d) return false; }
+	else
+		{ if (v > 0.0f || v < d) return false; }
+
+	const float w = -rdVdot(ab, e);
+
+	if (rdLikely(frontFace))
+		{ if (w < 0.0f || v + w > d) return false; }
+	else
+		{ if (w > 0.0f || v + w < d) return false; }
+
 	if (delayedDiv)
 	{
 		// Segment/ray intersects triangle. Perform delayed division
