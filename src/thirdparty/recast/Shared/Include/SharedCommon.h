@@ -617,7 +617,8 @@ inline unsigned int rdIlog2(unsigned int v)
 
 inline int rdAlign4(int x) { return (x+3) & ~3; }
 
-inline int rdOppositeTile(int side) { return (side+4) & 0x7; }
+inline int rdWrapTileSide(int side) { return side & 0x7; }
+inline int rdOppositeTile(int side) { return rdWrapTileSide(side+4); }
 
 inline void rdSwapByte(unsigned char* a, unsigned char* b)
 {
