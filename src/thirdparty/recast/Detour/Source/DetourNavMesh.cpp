@@ -868,8 +868,6 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 					float basePolyEdgeMid[3];
 					rdVsad(basePolyEdgeMid, baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, 0.5f);
 
-					const unsigned char startSide = rdClassifyPointInsideBounds(basePolyEdgeMid, baseHeader->bmin, baseHeader->bmax);
-
 					const int MAX_NEIS = 32; // Max neighbors
 					dtMeshTile* neis[MAX_NEIS];
 
@@ -877,28 +875,17 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 
 					if (params.linkToNeighbor) // Retrieve the neighboring tiles.
 					{
-						// Start with the tile our edge is facing first, as this has the highest
-						// chance for the best connection.
-						nneis = getNeighbourTilesAt(baseHeader->x, baseHeader->y, startSide, neis, nneis);
-						bool getOpposite = true;
-
-						// Get the other tiles starting from the opposite of the base side in the
-						// compass rose, and alternate between the next side and its opposite. It
-						// is possible we don't end up linking to these if we happen to run out
-						// of links on the base tile.
-						for (int n = 1; n < 8; ++n, getOpposite ^= true)
+						// Get the neighboring tiles starting from north in the compass rose.
+						// It is possible we don't end up linking to some of these tiles if
+						// we happen to run out of links on the base tile.
+						for (int n = 0; n < 8; ++n)
 						{
-							const unsigned char side = getOpposite 
-								? rdOppositeTile(startSide+n) 
-								: rdWrapTileSide(startSide+n);
-
-							rdAssert(side != startSide);
 							const int numSlotsLeft = MAX_NEIS-nneis;
 
 							if (!numSlotsLeft)
 								break;
 
-							nneis += getNeighbourTilesAt(baseHeader->x, baseHeader->y, side, &neis[nneis], numSlotsLeft);
+							nneis += getNeighbourTilesAt(baseHeader->x, baseHeader->y, n, &neis[nneis], numSlotsLeft);
 						}
 
 						// No neighbors, nothing to link to.
