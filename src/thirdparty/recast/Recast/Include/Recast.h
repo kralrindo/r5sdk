@@ -152,7 +152,7 @@ public:
 	/// Returns the total accumulated time of the specified performance timer.
 	/// @param	label	The category of the timer.
 	/// @return The accumulated time of the timer, or -1 if timers are disabled or the timer has never been started.
-	inline int getAccumulatedTime(const rcTimerLabel label) const { return m_timerEnabled ? doGetAccumulatedTime(label) : -1; }
+	inline rdTimeType getAccumulatedTime(const rcTimerLabel label) const { return m_timerEnabled ? doGetAccumulatedTime(label) : -1; }
 
 protected:
 	/// Clears all log entries.
@@ -162,7 +162,7 @@ protected:
 	/// @param[in]		category	The category of the message.
 	/// @param[in]		msg			The formatted message.
 	/// @param[in]		len			The length of the formatted message.
-	virtual void doLog(const rcLogCategory category, const char* msg, const int len) { rdIgnoreUnused(category); rdIgnoreUnused(msg); rdIgnoreUnused(len); }
+	virtual void doLog(const rcLogCategory category, const char* msg, const rdSizeType len) { rdIgnoreUnused(category); rdIgnoreUnused(msg); rdIgnoreUnused(len); }
 
 	/// Clears all timers. (Resets all to unused.)
 	virtual void doResetTimers() {}
@@ -178,7 +178,7 @@ protected:
 	/// Returns the total accumulated time of the specified performance timer.
 	/// @param[in]		label	The category of the timer.
 	/// @return The accumulated time of the timer, or -1 if timers are disabled or the timer has never been started.
-	virtual int doGetAccumulatedTime(const rcTimerLabel label) const { rdIgnoreUnused(label); return -1; }
+	virtual rdTimeType doGetAccumulatedTime(const rcTimerLabel label) const { rdIgnoreUnused(label); return -1; }
 	
 	/// True if logging is enabled.
 	bool m_logEnabled;

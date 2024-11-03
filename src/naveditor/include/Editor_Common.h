@@ -53,7 +53,7 @@ protected:
 	float m_lastBuiltTileBmin[3];
 	float m_lastBuiltTileBmax[3];
 
-	float m_totalBuildTimeMs;
+	double m_totalBuildTimeMs;
 
 	bool m_drawActiveTile;
 	bool m_keepInterResults;
@@ -78,7 +78,7 @@ protected:
 	struct FastLZCompressor* m_tcomp;
 	struct MeshProcess* m_tmproc;
 
-	float m_cacheBuildTimeMs;
+	double m_cacheBuildTimeMs;
 	int m_cacheCompressedSize;
 	int m_cacheRawSize;
 	int m_cacheLayerCount;

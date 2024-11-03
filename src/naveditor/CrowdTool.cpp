@@ -827,11 +827,11 @@ void CrowdToolState::updateTick(const float dt)
 	dtCrowd* crowd = m_editor->getCrowd();
 	if (!nav || !crowd) return;
 	
-	TimeVal startTime = getPerfTime();
+	rdTimeType startTime = getPerfTime();
 	
 	crowd->update(dt, &m_agentDebug);
 	
-	TimeVal endTime = getPerfTime();
+	rdTimeType endTime = getPerfTime();
 	
 	// Update agent trails
 	for (int i = 0; i < crowd->getAgentCount(); ++i)
