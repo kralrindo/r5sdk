@@ -865,11 +865,6 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 					float baseTmax;
 					rdCalcSubEdgeArea2D(basePolySpos, basePolyEpos, baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, baseTmin, baseTmax);
 
-					float baseEdgeDir[3];
-					rdVsub(baseEdgeDir, baseDetailPolyEdgeEpos, baseDetailPolyEdgeSpos);
-
-					float baseEdgeNorm[3];
-					rdCalcEdgeNormal2D(baseEdgeDir, baseEdgeNorm);
 					float basePolyEdgeMid[3];
 					rdVsad(basePolyEdgeMid, baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, 0.5f);
 
@@ -917,6 +912,11 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 						neis[0] = baseTile;
 					}
 
+					float baseEdgeDir[3];
+					rdVsub(baseEdgeDir, baseDetailPolyEdgeEpos, baseDetailPolyEdgeSpos);
+
+					float baseEdgeNorm[3];
+					rdCalcEdgeNormal2D(baseEdgeDir, baseEdgeNorm);
 
 					for (int n = nneis - 1; n >= 0; --n)
 					{
@@ -1028,9 +1028,6 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										float landEdgeDir[3];
 										rdVsub(landEdgeDir, landDetailPolyEdgeEpos, landDetailPolyEdgeSpos);
 
-										float landEdgeNorm[3];
-										rdCalcEdgeNormal2D(landEdgeDir, landEdgeNorm);
-
 										const float elevation = rdMathFabsf(basePolyEdgeMid[2] - landPolyEdgeMid[2]);
 										const float slopeAngle = rdMathFabsf(rdCalcSlopeAngle(basePolyEdgeMid, landPolyEdgeMid));
 										const bool baseOverlaps = rdCalcEdgeOverlap2D(baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, landDetailPolyEdgeSpos, landDetailPolyEdgeEpos, baseEdgeDir) > params.minEdgeOverlap;
@@ -1049,6 +1046,9 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										// These 2 polygons are already linked with the same traverse type.
 										if (linkedTraverseType && (rdBitCellBit(traverseType) & *linkedTraverseType))
 											continue;
+
+										float landEdgeNorm[3];
+										rdCalcEdgeNormal2D(landEdgeDir, landEdgeNorm);
 
 										const bool basePolyHigher = basePolyEdgeMid[2] > landPolyEdgeMid[2];
 										const float* const lowerEdgeMid = basePolyHigher ? landPolyEdgeMid : basePolyEdgeMid;
