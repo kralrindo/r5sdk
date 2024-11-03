@@ -878,11 +878,33 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 
 					int nneis = 0;
 
-					if (params.linkToNeighbor) // Retrieve the neighboring tiles on the side of our base poly edge.
+					if (params.linkToNeighbor) // Retrieve the neighboring tiles.
 					{
-						nneis = getNeighbourTilesAt(baseHeader->x, baseHeader->y, baseSide, neis, MAX_NEIS);
+						// Start with the tile our edge is facing first, as this has the highest
+						// chance for the best connection.
+						nneis = getNeighbourTilesAt(baseHeader->x, baseHeader->y, baseSide, neis, nneis);
+						bool getOpposite = true;
 
-						// No neighbors, nothing to link to on this side.
+						// Get the other tiles starting from the opposite of the base side in the
+						// compass rose, and alternate between the next side and its opposite. It
+						// is possible we don't end up linking to these if we happen to run out
+						// of links on the base tile.
+						for (int n = 1; n < 8; ++n, getOpposite ^= true)
+						{
+							const int side = getOpposite 
+								? rdOppositeTile(baseSide+n) 
+								: rdWrapTileSide(baseSide+n);
+
+							rdAssert(side != baseSide);
+							const int numSlotsLeft = MAX_NEIS-nneis;
+
+							if (!numSlotsLeft)
+								break;
+
+							nneis += getNeighbourTilesAt(baseHeader->x, baseHeader->y, side, &neis[nneis], numSlotsLeft);
+						}
+
+						// No neighbors, nothing to link to.
 						if (!nneis)
 							continue;
 					}
@@ -1030,9 +1052,10 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										const float* const lowerEdgeNorm = basePolyHigher ? landEdgeNorm : baseEdgeNorm;
 										const float* const higherEdgeNorm = basePolyHigher ? baseEdgeNorm : landEdgeNorm;
 
+										const float walkableHeight = basePolyHigher ? baseHeader->walkableHeight : landHeader->walkableHeight;
 										const float walkableRadius = basePolyHigher ? baseHeader->walkableRadius : landHeader->walkableRadius;
 
-										if (!params.traverseLinkInLOS(params.userData, lowerEdgeMid, higherEdgeMid, lowerEdgeNorm, higherEdgeNorm, walkableRadius, slopeAngle))
+										if (!params.traverseLinkInLOS(params.userData, lowerEdgeMid, higherEdgeMid, lowerEdgeNorm, higherEdgeNorm, walkableHeight, walkableRadius, slopeAngle))
 											continue;
 
 										const unsigned char landSide = params.linkToNeighbor
