@@ -715,7 +715,7 @@ dtStatus dtNavMesh::connectOffMeshLinks(const dtTileRef tileRef)
 		const int nneis = getTilesAt(tx, ty, neis, MAX_NEIS);
 
 		const unsigned char side = rdClassifyPointOutsideBounds(&con->pos[3], header->bmin, header->bmax);
-		const unsigned char oppositeSide = (side == 0xff) ? 0xff : (unsigned char)rdOppositeTile(side);
+		const unsigned char oppositeSide = (side == 0xff) ? 0xff : rdOppositeTile(side);
 
 		for (int j = 0; j < nneis; ++j)
 		{
