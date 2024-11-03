@@ -952,6 +952,9 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 							if (landPoly->getType() == DT_POLYTYPE_OFFMESH_CONNECTION)
 								continue;
 
+							if (landPoly == basePoly)
+								continue;
+
 							// If both polygons are sharing an edge, we should not establish the link as
 							// it will cause pathfinding to fail in this area when both polygons have
 							// their first link set to another; the path will never exit these polygons.
@@ -972,6 +975,8 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 								for (int q = 0; (q < landDetail->triCount) && !moveToNextTile; ++q)
 								{
 									const unsigned char* landTri = &landTile->detailTris[(landDetail->triBase+q)*4];
+									rdAssert(landTri != baseTri);
+
 									const float* landTriVerts[3];
 									for (int r = 0; r < 3; ++r)
 									{
