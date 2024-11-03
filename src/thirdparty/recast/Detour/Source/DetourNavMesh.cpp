@@ -870,8 +870,10 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 
 					float baseEdgeNorm[3];
 					rdCalcEdgeNormal2D(baseEdgeDir, baseEdgeNorm);
+					float basePolyEdgeMid[3];
+					rdVsad(basePolyEdgeMid, baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, 0.5f);
 
-					const unsigned char baseSide = rdClassifyDirection(baseEdgeDir, baseHeader->bmin, baseHeader->bmax);
+					const unsigned char startSide = rdClassifyPointInsideBounds(basePolyEdgeMid, baseHeader->bmin, baseHeader->bmax);
 
 					const int MAX_NEIS = 32; // Max neighbors
 					dtMeshTile* neis[MAX_NEIS];
@@ -882,7 +884,7 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 					{
 						// Start with the tile our edge is facing first, as this has the highest
 						// chance for the best connection.
-						nneis = getNeighbourTilesAt(baseHeader->x, baseHeader->y, baseSide, neis, nneis);
+						nneis = getNeighbourTilesAt(baseHeader->x, baseHeader->y, startSide, neis, nneis);
 						bool getOpposite = true;
 
 						// Get the other tiles starting from the opposite of the base side in the
@@ -891,11 +893,11 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 						// of links on the base tile.
 						for (int n = 1; n < 8; ++n, getOpposite ^= true)
 						{
-							const int side = getOpposite 
-								? rdOppositeTile(baseSide+n) 
-								: rdWrapTileSide(baseSide+n);
+							const unsigned char side = getOpposite 
+								? rdOppositeTile(startSide+n) 
+								: rdWrapTileSide(startSide+n);
 
-							rdAssert(side != baseSide);
+							rdAssert(side != startSide);
 							const int numSlotsLeft = MAX_NEIS-nneis;
 
 							if (!numSlotsLeft)
@@ -915,9 +917,6 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 						neis[0] = baseTile;
 					}
 
-					float basePolyEdgeMid[3];
-					if (nneis)
-						rdVsad(basePolyEdgeMid, baseDetailPolyEdgeSpos, baseDetailPolyEdgeEpos, 0.5f);
 
 					for (int n = nneis - 1; n >= 0; --n)
 					{
@@ -1066,6 +1065,7 @@ dtStatus dtNavMesh::connectTraverseLinks(const dtTileRef tileRef, const dtTraver
 										const unsigned char landSide = params.linkToNeighbor
 											? rdClassifyPointOutsideBounds(landPolyEdgeMid, baseHeader->bmin, baseHeader->bmax)
 											: rdClassifyPointInsideBounds(landPolyEdgeMid, landHeader->bmin, landHeader->bmax);
+										const unsigned char baseSide = rdOppositeTile(landSide);
 
 										float newBaseTmin;
 										float newBaseTmax;
