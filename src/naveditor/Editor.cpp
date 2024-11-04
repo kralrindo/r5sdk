@@ -98,11 +98,11 @@ static void initTraverseTableParams()
 	s_traverseTable[5]  = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, false }; // Unused
 	s_traverseTable[6]  = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, false }; // Unused
 
-	s_traverseTable[7]  = { 800.f, 1030.f, 0.f,   96.f,  0.0f, 6.5f,  0.f, true };
+	s_traverseTable[7]  = { 800.f, 1220.f, 0.f,   96.f,  0.0f, 6.5f,  0.f, true };
 	s_traverseTable[8]  = { 70.f,  220.f,  48.f,  220.f, 19.f, 84.f,  0.f,  false };
 	s_traverseTable[9]  = { 210.f, 450.f,  168.f, 384.f, 27.f, 87.5f, 0.f,  false };
-	s_traverseTable[10] = { 450.f, 860.f,  384.f, 672.f, 44.f, 89.5f, 0.f,  false };
-	s_traverseTable[11] = { 410.f, 940.f,  0.f,   56.f,  0.f , 7.f,   0.f,  true };
+	s_traverseTable[10] = { 450.f, 950.f,  384.f, 950.f, 44.f, 89.5f, 0.f,  false };
+	s_traverseTable[11] = { 410.f, 800.f,  0.f,   56.f,  0.f , 7.f,   0.f,  true };
 	s_traverseTable[12] = { 640.f, 930.f,  348.f, 640.f, 2.2f, 47.f,  0.f,  true };
 	s_traverseTable[13] = { 810.f, 1220.f, 256.f, 640.f, 5.7f, 58.5f, 0.f,  true };
 
@@ -110,17 +110,17 @@ static void initTraverseTableParams()
 	s_traverseTable[15] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1, false }; // Off-mesh links only, see 'level_script.ent'
 
 	s_traverseTable[16] = { 220.f, 410.f, 0.f,   104.f, 0.f,  12.5f, 0.f, false };
-	s_traverseTable[17] = { 410.f, 640.f, 104.f, 416.f, 4.6f, 53.f,  0.f, true };
+	s_traverseTable[17] = { 210.f, 580.f, 104.f, 416.f, 4.6f, 53.f,  0.f, true };
 
 	s_traverseTable[18] = { 0.0f, 0.0f, 0.f, 0.f, 0.f, 0.f, -1.f, false }; // Off-mesh links only, see 'level_script.ent'
 
 #if DT_NAVMESH_SET_VERSION > 5
 	s_traverseTable[19] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, false };    // Unused
-	s_traverseTable[20] = { 256.f, 400.f,  256.f, 330.f,  34.f, 89.f, 0.f, false }; // Maps to type 19 in MSET 5
-	s_traverseTable[21] = { 0.f,   1250.f, 340.f, 1250.f, 46.f, 89.f, 0.f, false }; // Maps to type 20 in MSET 5
+	s_traverseTable[20] = { 210.f, 450.f, 168.f, 384.f, 34.f, 89.f, 0.f, false }; // Maps to type 19 in MSET < 7
+	s_traverseTable[21] = { 450.f, 860.f, 340.f, 850.f, 46.f, 89.f, 0.f, false }; // Maps to type 20 in MSET < 7
 #else
-	s_traverseTable[19] = { 256.f, 400.f,  256.f, 330.f,  34.f, 89.f, 0.f, false }; // Maps to type 19 in MSET 5
-	s_traverseTable[20] = { 0.f,   1250.f, 340.f, 1250.f, 46.f, 89.f, 0.f, false }; // Maps to type 20 in MSET 5
+	s_traverseTable[19] = { 210.f, 450.f, 168.f, 384.f, 34.f, 89.f, 0.f, false }; // Maps to type 20 in MSET >= 7
+	s_traverseTable[20] = { 450.f, 860.f, 340.f, 850.f, 46.f, 89.f, 0.f, false }; // Maps to type 21 in MSET >= 7
 	s_traverseTable[21] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, false };    // Unused
 #endif
 	s_traverseTable[22] = { 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, -1.f, false }; // Unused
