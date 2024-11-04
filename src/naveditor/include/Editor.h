@@ -240,6 +240,7 @@ protected:
 	bool m_filterLowHangingObstacles;
 	bool m_filterLedgeSpans;
 	bool m_filterWalkableLowHeightSpans;
+	bool m_buildTraversePortals;
 	bool m_traverseRayDynamicOffset;
 	bool m_collapseLinkedPolyGroups;
 	bool m_buildBvTree;

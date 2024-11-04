@@ -147,6 +147,7 @@ Editor::Editor() :
 	m_filterLowHangingObstacles(true),
 	m_filterLedgeSpans(true),
 	m_filterWalkableLowHeightSpans(true),
+	m_buildTraversePortals(true),
 	m_traverseRayDynamicOffset(true),
 	m_collapseLinkedPolyGroups(false),
 	m_buildBvTree(true),
@@ -451,6 +452,8 @@ void Editor::handleCommonSettings()
 
 	if (ImGui::CollapsingHeader("Traverse Table Fine Tuner"))
 		renderTraverseTableFineTuners();
+
+	ImGui::Checkbox("Build Traverse Portals", &m_buildTraversePortals);
 
 	ImGui::Checkbox("Collapse Linked Poly Groups", &m_collapseLinkedPolyGroups);
 

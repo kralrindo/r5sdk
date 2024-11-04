@@ -759,14 +759,17 @@ void Editor_TileMesh::buildTile(const float* pos)
 				}
 			}
 
-			// Reconnect the traverse links.
-			dtTraverseLinkConnectParams params;
-			createTraverseLinkParams(params);
+			if (m_buildTraversePortals)
+			{
+				// Reconnect the traverse links.
+				dtTraverseLinkConnectParams params;
+				createTraverseLinkParams(params);
 
-			params.linkToNeighbor = false;
-			m_navMesh->connectTraverseLinks(tileRef, params);
-			params.linkToNeighbor = true;
-			m_navMesh->connectTraverseLinks(tileRef, params);
+				params.linkToNeighbor = false;
+				m_navMesh->connectTraverseLinks(tileRef, params);
+				params.linkToNeighbor = true;
+				m_navMesh->connectTraverseLinks(tileRef, params);
+			}
 
 			createStaticPathingData();
 		}
@@ -877,7 +880,9 @@ void Editor_TileMesh::buildAllTiles()
 	}
 
 	connectOffMeshLinks();
-	createTraverseLinks();
+
+	if (m_buildTraversePortals)
+		createTraverseLinks();
 
 	createStaticPathingData();
 	
