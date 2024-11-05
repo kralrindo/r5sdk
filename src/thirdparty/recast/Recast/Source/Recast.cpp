@@ -446,8 +446,6 @@ bool rcBuildCompactHeightfield(rcContext* context, const int walkableHeight, con
 	}
 	memset(compactHeightfield.areas, RC_NULL_AREA, sizeof(unsigned char) * spanCount);
 
-	const int MAX_HEIGHT = 0xffff;
-
 	// Fill in cells and spans.
 	int currentCellIndex = 0;
 	const int numColumns = xSize * ySize;
@@ -470,8 +468,8 @@ bool rcBuildCompactHeightfield(rcContext* context, const int walkableHeight, con
 			if (span->area != RC_NULL_AREA)
 			{
 				const int bot = (int)span->smax;
-				const int top = span->next ? (int)span->next->smin : MAX_HEIGHT;
-				compactHeightfield.spans[currentCellIndex].z = (unsigned short)rdClamp(bot, 0, 0xffff);
+				const int top = span->next ? (int)span->next->smin : RC_SPAN_MAX_HEIGHT;
+				compactHeightfield.spans[currentCellIndex].z = (unsigned short)rdClamp(bot, 0, RC_SPAN_MAX_HEIGHT);
 				compactHeightfield.spans[currentCellIndex].h = (unsigned char)rdClamp(top - bot, 0, 0xff);
 				compactHeightfield.areas[currentCellIndex] = span->area;
 				currentCellIndex++;

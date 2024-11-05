@@ -281,7 +281,7 @@ struct rcConfig
 };
 
 /// Defines the number of bits allocated to rcSpan::smin and rcSpan::smax.
-static const int RC_SPAN_HEIGHT_BITS = 13;
+static const int RC_SPAN_HEIGHT_BITS = 29;
 /// Defines the maximum value for rcSpan::smin and rcSpan::smax.
 static const int RC_SPAN_MAX_HEIGHT = (1 << RC_SPAN_HEIGHT_BITS) - 1;
 
@@ -343,7 +343,7 @@ struct rcCompactSpan
 	unsigned short z;			///< The lower extent of the span. (Measured from the heightfield's base.)
 	unsigned short reg;			///< The id of the region the span belongs to. (Or zero if not in a region.)
 	unsigned int con : 24;		///< Packed neighbor connection data.
-	unsigned int h : 8;			///< The height of the span.  (Measured from #y.)
+	unsigned int h : 8;			///< The height of the span.  (Measured from #z.)
 };
 
 /// A compact, static heightfield representing unobstructed space.
