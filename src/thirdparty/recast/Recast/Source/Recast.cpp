@@ -405,6 +405,9 @@ bool rcBuildCompactHeightfield(rcContext* context, const int walkableHeight, con
 	const int ySize = heightfield.height;
 	const int spanCount = rcGetHeightFieldSpanCount(context, heightfield);
 
+	if (!spanCount)
+		return false;
+
 	// Fill in header.
 	compactHeightfield.width = xSize;
 	compactHeightfield.height = ySize;
