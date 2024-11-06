@@ -1078,12 +1078,12 @@ inline int rcGetDirOffsetY(int direction)
 
 /// Gets the direction for the specified offset. One of x and y should be 0.
 /// @param[in]		offsetX		The x offset. [Limits: -1 <= value <= 1]
-/// @param[in]		offsetZ		The z offset. [Limits: -1 <= value <= 1]
+/// @param[in]		offsetZ		The Y offset. [Limits: -1 <= value <= 1]
 /// @return The direction that represents the offset.
-inline int rcGetDirForOffset(int offsetX, int offsetZ)
+inline int rcGetDirForOffset(int offsetX, int offsetY)
 {
 	static const int dirs[5] = { 3, 0, -1, 2, 1 };
-	return dirs[((offsetZ + 1) << 1) + offsetX];
+	return dirs[((offsetY + 1) << 1) + offsetX];
 }
 
 /// @}
