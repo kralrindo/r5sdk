@@ -473,6 +473,9 @@ void rdClosestPtPointTriangle(float* closest, const float* p,
 ///  @param[out]	h		The resulting height.
 bool rdClosestHeightPointTriangle(const float* p, const float* a, const float* b, const float* c, float& h);
 
+bool rdIntersectSegmentTriangle(const float* sp, const float* sq,
+								const float* a, const float* b, const float* c, float& t);
+
 bool rdIntersectSegmentPoly2D(const float* p0, const float* p1,
 							  const float* verts, int nverts,
 							  float& tmin, float& tmax,

@@ -120,6 +120,50 @@ void rdClosestPtPointTriangle(float* closest, const float* p,
 	closest[2] = a[2] + ab[2] * v + ac[2] * w;
 }
 
+// note(amos): based on the Möller–Trumbore algorithm, see:
+// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
+bool rdIntersectSegmentTriangle(const float* sp, const float* sq,
+								const float* a, const float* b, const float* c, float& t)
+{
+	float ab[3], ac[3], qp[3];
+	rdVsub(ab, b, a);
+	rdVsub(ac, c, a);
+	rdVsub(qp, sq, sp);
+
+	float h[3];
+	rdVcross(h, qp, ac);
+
+	const float d = rdVdot(ab, h);
+
+	if (d > -RD_EPS && d < RD_EPS)
+		return false; // Ray is parallel to the triangle plane
+
+	float s[3];
+	rdVsub(s, sp, a);
+
+	const float id = 1.0f / d;
+	const float u = rdVdot(s, h) * id;
+
+	if (u < 0.0f || u > 1.0f)
+		return false;
+
+	float q[3];
+	rdVcross(q, s, ab);
+
+	const float v = rdVdot(qp, q) * id;
+
+	if (v < 0.0f || u+v > 1.0f)
+		return false;
+
+	t = rdVdot(ac, q)*id;
+
+	if (t < 0.0f || t > 1.0f)
+		return false;
+
+	// Segment/ray intersects triangle
+	return true;
+}
+
 bool rdIntersectSegmentPoly2D(const float* p0, const float* p1,
 							  const float* verts, int nverts,
 							  float& tmin, float& tmax,

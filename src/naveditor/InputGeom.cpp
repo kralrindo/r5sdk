@@ -27,50 +27,6 @@
 #include "NavEditor/Include/Editor.h"
 #include <naveditor/include/GameUtils.h>
 
-// note(amos): based on the Möller–Trumbore algorithm, see:
-// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
-static inline bool intersectSegmentTriangle(const float* sp, const float* sq,
-											const float* a, const float* b, const float* c, float& t)
-{
-	float ab[3], ac[3], qp[3];
-	rdVsub(ab, b, a);
-	rdVsub(ac, c, a);
-	rdVsub(qp, sq, sp);
-
-	float h[3];
-	rdVcross(h, qp, ac);
-
-	const float d = rdVdot(ab, h);
-
-	if (d > -RD_EPS && d < RD_EPS)
-		return false; // Ray is parallel to the triangle plane
-
-	float s[3];
-	rdVsub(s, sp, a);
-
-	const float id = 1.0f/d;
-	const float u = rdVdot(s, h)*id;
-
-	if (u < 0.0f || u > 1.0f)
-		return false;
-
-	float q[3];
-	rdVcross(q, s, ab);
-
-	const float v = rdVdot(qp, q)*id;
-
-	if (v < 0.0f || u+v > 1.0f)
-		return false;
-
-	t = rdVdot(ac, q)*id;
-
-	if (t < 0.0f || t > 1.0f)
-		return false;
-
-	// Segment/ray intersects triangle
-	return true;
-}
-
 static char* parseRow(char* buf, char* bufEnd, char* row, int len)
 {
 	bool start = true;
@@ -598,10 +554,10 @@ bool InputGeom::raycastMesh(const float* src, const float* dst, const unsigned i
 		for (int j = 0; j < ntris*3; j += 3)
 		{
 			float t = 1;
-			if (intersectSegmentTriangle(src, dst,
-										 &verts[tris[j]*3],
-										 &verts[tris[j+1]*3],
-										 &verts[tris[j+2]*3], t))
+			if (rdIntersectSegmentTriangle(src, dst,
+										   &verts[tris[j]*3],
+										   &verts[tris[j+1]*3],
+										   &verts[tris[j+2]*3], t))
 			{
 				// Caller isn't interested in finding the closest intersection; return out.
 				if (!tmin)
