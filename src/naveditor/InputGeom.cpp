@@ -27,59 +27,47 @@
 #include "NavEditor/Include/Editor.h"
 #include <naveditor/include/GameUtils.h>
 
+// note(amos): based on the Möller–Trumbore algorithm, see:
+// https://en.wikipedia.org/wiki/M%C3%B6ller%E2%80%93Trumbore_intersection_algorithm
 static inline bool intersectSegmentTriangle(const float* sp, const float* sq,
-									 const float* a, const float* b, const float* c,
-									 float &t, const bool delayedDiv)
+											const float* a, const float* b, const float* c, float& t)
 {
-	float ab[3], ac[3], qp[3], ap[3], norm[3], e[3];
+	float ab[3], ac[3], qp[3];
 	rdVsub(ab, b, a);
 	rdVsub(ac, c, a);
-	rdVsub(qp, sp, sq);
-	
-	// Compute triangle normal. Can be precalculated or cached if
-	// intersecting multiple segments against the same triangle
-	rdVcross(norm, ab, ac);
-	
-	// Compute denominator d. If abs(d) < EPS, segment is parallel to or points
-	// away from triangle, so exit early
-	const float d = rdVdot(qp, norm);
-	if (rdMathFabsf(d) < RD_EPS) return false;
-	
-	// Compute intersection t value of pq with plane of triangle. A ray
-	// intersects if 0 <= t. Segment intersects if 0 <= t <= 1. Delay
-	// dividing by d until intersection has been found to pierce triangle
-	rdVsub(ap, sp, a);
-	t = rdVdot(ap, norm);
+	rdVsub(qp, sq, sp);
 
-	const bool frontFace = (d > 0.0f);
+	float h[3];
+	rdVcross(h, qp, ac);
 
-	// For segment; exclude the 't > d' and 't < d' code line for a ray test
-	if (rdLikely(frontFace))
-		{ if (t < 0.0f || t > d) return false; }
-	else
-		{ if (t > 0.0f || t < d) return false; }
+	const float d = rdVdot(ab, h);
 
-	// Compute barycentric coordinate components and test if within bounds
-	rdVcross(e, qp, ap);
-	const float v = rdVdot(ac, e);
-	if (rdLikely(frontFace))
-		{ if (v < 0.0f || v > d) return false; }
-	else
-		{ if (v > 0.0f || v < d) return false; }
+	if (d > -RD_EPS && d < RD_EPS)
+		return false; // Ray is parallel to the triangle plane
 
-	const float w = -rdVdot(ab, e);
+	float s[3];
+	rdVsub(s, sp, a);
 
-	if (rdLikely(frontFace))
-		{ if (w < 0.0f || v + w > d) return false; }
-	else
-		{ if (w > 0.0f || v + w < d) return false; }
+	const float id = 1.0f/d;
+	const float u = rdVdot(s, h)*id;
 
-	if (delayedDiv)
-	{
-		// Segment/ray intersects triangle. Perform delayed division
-		t /= d;
-	}
-	
+	if (u < 0.0f || u > 1.0f)
+		return false;
+
+	float q[3];
+	rdVcross(q, s, ab);
+
+	const float v = rdVdot(qp, q)*id;
+
+	if (v < 0.0f || u+v > 1.0f)
+		return false;
+
+	t = rdVdot(ac, q)*id;
+
+	if (t < 0.0f || t > 1.0f)
+		return false;
+
+	// Segment/ray intersects triangle
 	return true;
 }
 
@@ -505,6 +493,9 @@ bool InputGeom::saveGeomSet(const BuildSettings* settings)
 	return true;
 }
 
+static const int MAX_CHUNK_INDICES = 0xffff;
+static int s_chunkIndices[MAX_CHUNK_INDICES];
+
 bool InputGeom::raycastMesh(const float* src, const float* dst, const unsigned int mask, int* vidx, float* tmin) const
 {
 	if (vidx)
@@ -592,8 +583,7 @@ bool InputGeom::raycastMesh(const float* src, const float* dst, const unsigned i
 	q[0] = src[0] + (dst[0]-src[0]) * btmax;
 	q[1] = src[1] + (dst[1]-src[1]) * btmax;
 	
-	int cid[512];
-	const int ncid = rcGetChunksOverlappingSegment(m_chunkyMesh, p, q, cid, 512);
+	const int ncid = rcGetChunksOverlappingSegment(m_chunkyMesh, p, q, s_chunkIndices, MAX_CHUNK_INDICES);
 	if (!ncid)
 		return false;
 
@@ -601,7 +591,7 @@ bool InputGeom::raycastMesh(const float* src, const float* dst, const unsigned i
 	
 	for (int i = 0; i < ncid; ++i)
 	{
-		const rcChunkyTriMeshNode& node = m_chunkyMesh->nodes[cid[i]];
+		const rcChunkyTriMeshNode& node = m_chunkyMesh->nodes[s_chunkIndices[i]];
 		const int* tris = &m_chunkyMesh->tris[node.i*3];
 		const int ntris = node.n;
 
@@ -611,7 +601,7 @@ bool InputGeom::raycastMesh(const float* src, const float* dst, const unsigned i
 			if (intersectSegmentTriangle(src, dst,
 										 &verts[tris[j]*3],
 										 &verts[tris[j+1]*3],
-										 &verts[tris[j+2]*3], t, tmin != nullptr))
+										 &verts[tris[j+2]*3], t))
 			{
 				// Caller isn't interested in finding the closest intersection; return out.
 				if (!tmin)
