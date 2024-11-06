@@ -222,9 +222,16 @@ bool rcBuildHeightfieldLayers(rcContext* ctx, rcCompactHeightfield& chf,
 		}
 	}
 
+	if (regId == 0)
+	{
+		// No regions generated, but without an error.
+		return true;
+	}
+
 	// Allocate and init layer regions.
 	const int nregs = (int)regId;
 	rdScopedDelete<rcLayerRegion> regs((rcLayerRegion*)rdAlloc(sizeof(rcLayerRegion)*nregs, RD_ALLOC_TEMP));
+
 	if (!regs)
 	{
 		ctx->log(RC_LOG_ERROR, "rcBuildHeightfieldLayers: Out of memory 'regs' (%d).", nregs);
