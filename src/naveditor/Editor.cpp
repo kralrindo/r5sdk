@@ -146,6 +146,7 @@ Editor::Editor() :
 	m_ignoreWindingOrder(false),
 	m_filterLowHangingObstacles(true),
 	m_filterLedgeSpans(true),
+	m_filterNeighborSlopes(false),
 	m_filterWalkableLowHeightSpans(true),
 	m_buildTraversePortals(true),
 	m_traverseRayDynamicOffset(true),
@@ -425,8 +426,15 @@ void Editor::handleCommonSettings()
 	ImGui::Separator();
 	ImGui::Text("Filtering");
 	ImGui::Checkbox("Low Hanging Obstacles##FilterSettings", &m_filterLowHangingObstacles);
-	ImGui::Checkbox("Ledge Spans##FilterSettings", &m_filterLedgeSpans);
 	ImGui::Checkbox("Walkable Low Height Spans##FilterSettings", &m_filterWalkableLowHeightSpans);
+
+	ImGui::Checkbox("Ledge Spans##FilterSettings", &m_filterLedgeSpans);
+	if (m_filterLedgeSpans)
+	{
+		ImGui::Indent();
+		ImGui::Checkbox("Neighbor Slopes##FilterSettings", &m_filterNeighborSlopes);
+		ImGui::Unindent();
+	}
 
 	ImGui::PushItemWidth(145.f);
 	ImGui::Separator();

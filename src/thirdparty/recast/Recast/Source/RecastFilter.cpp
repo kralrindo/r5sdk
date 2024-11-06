@@ -58,7 +58,7 @@ void rcFilterLowHangingWalkableObstacles(rcContext* context, const int walkableC
 }
 
 void rcFilterLedgeSpans(rcContext* context, const int walkableHeight, const int walkableClimb,
-                        rcHeightfield& heightfield)
+                        const bool cullSteepNeiSlopes, rcHeightfield& heightfield)
 {
 	rdAssert(context);
 	
@@ -146,7 +146,14 @@ void rcFilterLedgeSpans(rcContext* context, const int walkableHeight, const int 
 				}
 				// If the difference between all neighbours is too large,
 				// we are at steep slope, mark the span as ledge.
-				else if ((accessibleNeighborMaxHeight - accessibleNeighborMinHeight) > walkableClimb)
+				//
+				// note(amos): since we mostly work with relatively large
+				// voxels (8 - 15), this test can be quite aggressive
+				// causing the beginning of stairs to be culled away due
+				// to the limited amount of voxels that could fit inside
+				// the agent's radius. However, these spans perfectly
+				// climbable. Added an option to opt out of this feature.
+				else if (cullSteepNeiSlopes && (accessibleNeighborMaxHeight - accessibleNeighborMinHeight) > walkableClimb)
 				{
 					span->area = RC_NULL_AREA;
 				}

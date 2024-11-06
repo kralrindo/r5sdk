@@ -870,12 +870,13 @@ void rcFilterLowHangingWalkableObstacles(rcContext* context, int walkableClimb, 
 /// 
 /// @ingroup recast
 /// @param[in,out]	context				The build context to use during the operation.
-/// @param[in]		walkableHeight	Minimum floor to 'ceiling' height that will still allow the floor area to 
-/// 								be considered walkable. [Limit: >= 3] [Units: vx]
-/// @param[in]		walkableClimb	Maximum ledge height that is considered to still be traversable. 
-/// 								[Limit: >=0] [Units: vx]
+/// @param[in]		walkableHeight		Minimum floor to 'ceiling' height that will still allow the floor area to 
+/// 									be considered walkable. [Limit: >= 3] [Units: vx]
+/// @param[in]		walkableClimb		Maximum ledge height that is considered to still be traversable. 
+/// @param[in]		cullSteepNeiSlopes	Whether to mark spans having neighbors not within the walkable climb range as non walkable.
+/// 									[Limit: >=0] [Units: vx]
 /// @param[in,out]	heightfield			A fully built heightfield.  (All spans have been added.)
-void rcFilterLedgeSpans(rcContext* context, int walkableHeight, int walkableClimb, rcHeightfield& heightfield);
+void rcFilterLedgeSpans(rcContext* context, int walkableHeight, int walkableClimb, bool cullSteepNeiSlopes, rcHeightfield& heightfield);
 
 /// Marks walkable spans as not walkable if the clearance above the span is less than the specified height.
 /// 

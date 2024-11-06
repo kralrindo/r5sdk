@@ -239,6 +239,7 @@ protected:
 	bool m_ignoreWindingOrder;
 	bool m_filterLowHangingObstacles;
 	bool m_filterLedgeSpans;
+	bool m_filterNeighborSlopes;
 	bool m_filterWalkableLowHeightSpans;
 	bool m_buildTraversePortals;
 	bool m_traverseRayDynamicOffset;
