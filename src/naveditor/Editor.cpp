@@ -272,9 +272,7 @@ void Editor::resetCommonSettings()
 	m_minTileBits = 16;
 	m_maxTileBits = 28;
 #endif
-	m_tileSize = 64;
-	m_cellSize = 8.0f;
-	m_cellHeight = 9.0f;
+	m_tileSize = 128;
 
 	// todo(amos): check if this applies for all hulls, and check if this is the
 	// actual value used by the game. This seems to generate slopes very close
@@ -298,21 +296,31 @@ void Editor::resetCommonSettings()
 	m_traversePortalMaxAlign = 0.5f;
 
 	m_regionMinSize = 4;
-	m_regionMergeSize = 20;
-	m_edgeMaxLen = 7;
+	m_regionMergeSize = 8;
+
+	// note(amos): according to Recast documentation, the best value should be
+	// around walkableRadius * 8, however with titanfall and apex legends maps
+	// the tessellation results are way better with this feature disabled.
+	m_edgeMaxLen = 0;
 	m_edgeMaxError = 1.3f;
-	m_vertsPerPoly = 6;
-	m_detailSampleDist = 4.0f;
-	m_detailSampleMaxError = 2.0f;
+	m_vertsPerPoly = RD_VERTS_PER_POLYGON;
+	m_detailSampleDist = 6.0f;
+	m_detailSampleMaxError = 3.0f;
 	m_partitionType = EDITOR_PARTITION_WATERSHED;
 
-	m_traverseLinkDrawParams.cellHeight = m_cellHeight;
-	m_traverseLinkDrawParams.extraOffset = (m_agentRadius*2)+m_traverseRayExtraOffset;
-	m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
+	updateTraverseLinkRenderParams();
 
 	initTraverseMasks();
 	initTraverseTableParams();
 }
+
+void Editor::updateTraverseLinkRenderParams()
+{
+	m_traverseLinkDrawParams.cellHeight = m_cellHeight;
+	m_traverseLinkDrawParams.extraOffset = (m_agentRadius*2) + m_traverseRayExtraOffset;
+	m_traverseLinkDrawParams.dynamicOffset = m_traverseRayDynamicOffset;
+}
+
 void Editor::handleCommonSettings()
 {
 	ImGui::Text("NavMesh Type");
@@ -331,9 +339,9 @@ void Editor::handleCommonSettings()
 	ImGui::PushItemWidth(180.f);
 	ImGui::Text("Rasterization");
 
-	ImGui::SliderFloat("Cell Size", &m_cellSize, 12.1f, 100.0f);
+	ImGui::SliderFloat("Cell Size", &m_cellSize, 0.4f, 16.0f);
 	
-	if (ImGui::SliderFloat("Cell Height", &m_cellHeight, 0.4f, 100.0f))
+	if (ImGui::SliderFloat("Cell Height", &m_cellHeight, 0.4f, 16.0f))
 		m_traverseLinkDrawParams.cellHeight = m_cellHeight;
 	
 	if (m_geom)
@@ -440,12 +448,12 @@ void Editor::handleCommonSettings()
 	ImGui::Separator();
 
 	ImGui::Text("Polygonization");
-	ImGui::SliderInt("Max Edge Length", &m_edgeMaxLen, 0, 50);
+	ImGui::SliderInt("Max Edge Length", &m_edgeMaxLen, 0, 1024);
 	ImGui::SliderFloat("Max Edge Error", &m_edgeMaxError, 0.1f, 3.0f);
 	ImGui::SliderInt("Verts Per Poly", &m_vertsPerPoly, 3, 6);
 
 #if DT_NAVMESH_SET_VERSION >= 8
-	ImGui::SliderInt("Poly Cell Resolution", &m_polyCellRes, 1, 16);
+	ImGui::SliderInt("Poly Cell Resolution", &m_polyCellRes, 1, 128);
 #endif
 
 	ImGui::Separator();
@@ -1384,25 +1392,30 @@ void Editor::renderTraverseTableFineTuners()
 // NOTE: the climb height should never equal or exceed the agent's height, see https://groups.google.com/g/recastnavigation/c/L5rBamxcOBk/m/5xGLj6YP25kJ
 // Quote: "you will get into trouble in cases where there is an overhand which is low enough to step over and high enough for the agent to walk under."
 const NavMeshDefaults_s g_navMeshDefaults[NAVMESH_COUNT] = {
-	{ g_navMeshNames[NAVMESH_SMALL]      , NAI_Hull::Width(HULL_HUMAN)   * NAI_Hull::Scale(HULL_HUMAN)  , NAI_Hull::Height(HULL_HUMAN)  , NAI_Hull::StepHeight(HULL_HUMAN)  , 8, 8 },
-	{ g_navMeshNames[NAVMESH_MED_SHORT]  , NAI_Hull::Width(HULL_PROWLER) * NAI_Hull::Scale(HULL_PROWLER), NAI_Hull::Height(HULL_PROWLER), NAI_Hull::StepHeight(HULL_PROWLER), 8, 4 },
-	{ g_navMeshNames[NAVMESH_MEDIUM]     , NAI_Hull::Width(HULL_MEDIUM)  * NAI_Hull::Scale(HULL_MEDIUM) , NAI_Hull::Height(HULL_MEDIUM) , NAI_Hull::StepHeight(HULL_MEDIUM) , 8, 4 },
-	{ g_navMeshNames[NAVMESH_LARGE]      , NAI_Hull::Width(HULL_TITAN)   * NAI_Hull::Scale(HULL_TITAN)  , NAI_Hull::Height(HULL_TITAN)  , NAI_Hull::StepHeight(HULL_TITAN)  , 15, 2 },
-	{ g_navMeshNames[NAVMESH_EXTRA_LARGE], NAI_Hull::Width(HULL_GOLIATH) * NAI_Hull::Scale(HULL_GOLIATH), NAI_Hull::Height(HULL_GOLIATH), NAI_Hull::StepHeight(HULL_GOLIATH), 15, 2 },
+	{ g_navMeshNames[NAVMESH_SMALL]      , NAI_Hull::Width(HULL_HUMAN)   * NAI_Hull::Scale(HULL_HUMAN)  , NAI_Hull::Height(HULL_HUMAN)  , NAI_Hull::StepHeight(HULL_HUMAN)  , 8.f, 4.f, 16 },
+	{ g_navMeshNames[NAVMESH_MED_SHORT]  , NAI_Hull::Width(HULL_PROWLER) * NAI_Hull::Scale(HULL_PROWLER), NAI_Hull::Height(HULL_PROWLER), NAI_Hull::StepHeight(HULL_PROWLER), 8.f, 4.f, 8 },
+	{ g_navMeshNames[NAVMESH_MEDIUM]     , NAI_Hull::Width(HULL_MEDIUM)  * NAI_Hull::Scale(HULL_MEDIUM) , NAI_Hull::Height(HULL_MEDIUM) , NAI_Hull::StepHeight(HULL_MEDIUM) , 8.f, 4.f, 8 },
+	{ g_navMeshNames[NAVMESH_LARGE]      , NAI_Hull::Width(HULL_TITAN)   * NAI_Hull::Scale(HULL_TITAN)  , NAI_Hull::Height(HULL_TITAN)  , NAI_Hull::StepHeight(HULL_TITAN)  , 15.f, 7.5f, 4 },
+	{ g_navMeshNames[NAVMESH_EXTRA_LARGE], NAI_Hull::Width(HULL_GOLIATH) * NAI_Hull::Scale(HULL_GOLIATH), NAI_Hull::Height(HULL_GOLIATH), NAI_Hull::StepHeight(HULL_GOLIATH), 15.f, 7.5f, 4 },
 };
 
 void Editor::selectNavMeshType(const NavMeshType_e navMeshType)
 {
 	const NavMeshDefaults_s& h = g_navMeshDefaults[navMeshType];
 
-	m_agentRadius = h.radius;
-	m_agentMaxClimb = h.climbHeight;
-	m_agentHeight = h.height;
 	m_navmeshName = h.name;
-	m_cellSize = h.cellSize;
-	m_polyCellRes = h.polyCellResolution;
 
+	m_agentRadius = h.radius;
+	m_agentHeight = h.height;
+	m_agentMaxClimb = h.climbHeight;
+
+	m_cellSize = h.cellSize;
+	m_cellHeight = h.cellHeight;
+
+	m_polyCellRes = h.polyCellResolution;
 	m_selectedNavMeshType = navMeshType;
+
+	updateTraverseLinkRenderParams();
 }
 
 bool Editor::loadAll(std::string path, const bool fullPath)

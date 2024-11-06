@@ -33,10 +33,14 @@ struct dtMeshTile;
 struct NavMeshDefaults_s
 {
 	const char* name;
+
 	float radius;
 	float height;
 	float climbHeight;
+
 	float cellSize;
+	float cellHeight;
+
 	int polyCellResolution;
 };
 extern const NavMeshDefaults_s g_navMeshDefaults[NAVMESH_COUNT];
@@ -363,6 +367,8 @@ public:
 
 	void resetCommonSettings();
 	void handleCommonSettings();
+
+	void updateTraverseLinkRenderParams();
 
 	void createTraverseLinkParams(dtTraverseLinkConnectParams& params);
 
