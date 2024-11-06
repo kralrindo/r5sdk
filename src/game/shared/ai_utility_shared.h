@@ -27,7 +27,7 @@ public:
 
 	void DrawNavMeshBVTree(const dtNavMesh* mesh,
 		const Vector3D& vCameraPos,
-		const VPlane& vCullPlane,
+		const VPlane* vCullPlane,
 		const int iBVTreeIndex,
 		const float flCameraRange,
 		const int nTileRange,
@@ -35,7 +35,7 @@ public:
 
 	void DrawNavMeshPortals(const dtNavMesh* mesh,
 		const Vector3D& vCameraPos,
-		const VPlane& vCullPlane,
+		const VPlane* vCullPlane,
 		const int iPortalIndex,
 		const float flCameraRange,
 		const int nTileRange,
@@ -43,7 +43,7 @@ public:
 
 	void DrawNavMeshPolyBoundaries(const dtNavMesh* mesh,
 		const Vector3D& vCameraPos,
-		const VPlane& vCullPlane,
+		const VPlane* vCullPlane,
 		const int iBoundaryIndex,
 		const float flCameraRange,
 		const int nTileRange,
@@ -53,7 +53,7 @@ public:
 
 	shortx8 PackNodeLink(int32_t a, int32_t b, int32_t c = 0, int32_t d = 0) const;
 	int GetNearestNodeToPos(const CAI_Network* pAINetwork, const Vector3D* vec) const;
-	bool IsTileWithinRange(const dtMeshTile* pTile, const VPlane& vPlane, const Vector3D& vCamera, const float flCameraRadius) const;
+	bool IsTileWithinRange(const dtMeshTile* pTile, const VPlane* vPlane, const Vector3D& vCamera, const float flCameraRadius) const;
 
 private:
 	Color m_BoxColor;
