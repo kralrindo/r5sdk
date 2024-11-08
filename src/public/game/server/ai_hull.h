@@ -36,7 +36,7 @@ struct Hull_s
 
 		: hullName(pName), hullBit(bit)
 		, mins(_mins), maxs(_maxs)
-		, stepHeight(_stepHeight), scale(_scale)
+		, stepHeight(_stepHeight), extentScale(_scale)
 		, unk10(_unk10), unk11(_unk11)
 		, traceMask(_traceMask), navMeshType(_navMeshType) {}
 
@@ -46,8 +46,17 @@ struct Hull_s
 	Vector3D mins;
 	Vector3D maxs;
 
+	// The maximum height an object can have
+	// before the hull could no longer step
+	// over it.
 	float stepHeight;
-	float scale;  // Some scale?
+
+	// The scale to apply to the hull size
+	// when using it as extents to query a
+	// point on the navmesh. This should
+	// also be used on the radius of the
+	// hull when building the navmesh.
+	float extentScale;
 
 	float unk10;
 	float unk11;
@@ -98,9 +107,9 @@ namespace NAI_Hull
 	inline float Length(const Hull_e id) { return (g_aiHullProperties[id].maxs.x - g_aiHullProperties[id].mins.x); }
 	inline float Width(const Hull_e id)  { return (g_aiHullProperties[id].maxs.y - g_aiHullProperties[id].mins.y); }
 	inline float Height(const Hull_e id) { return (g_aiHullProperties[id].maxs.z - g_aiHullProperties[id].mins.z); }
-	inline float Scale(const Hull_e id)  { return g_aiHullProperties[id].scale; }
 
 	inline float StepHeight(const Hull_e id) { return g_aiHullProperties[id].stepHeight; }
+	inline float ExtentScale(const Hull_e id) { return g_aiHullProperties[id].extentScale; }
 
 	inline int Bits(const Hull_e id) { return g_aiHullProperties[id].hullBit; }
 	inline const char* Name(const Hull_e id) { return g_aiHullProperties[id].hullName; }
