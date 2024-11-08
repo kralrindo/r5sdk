@@ -61,19 +61,17 @@ void CustomPakData_t::UnloadAndRemoveAll()
 {
     // Base SDK paks should not be unloaded here, but only right before base
     // engine paks are unloaded. Only unload user requested and level settings
-    // paks from here.
-    for (size_t i = CustomPakData_t::PAK_TYPE_COUNT; i < numHandles; i++)
+    // paks from here. Also, ideally this loop runs in reverse, but the engine
+    // does not support that as it would crash when paks are unloaded that way.
+    for (size_t i = CustomPakData_t::PAK_TYPE_COUNT, n = numHandles; i < n; i++)
     {
         const PakHandle_t pakId = handles[i];
-
-        if (pakId == PAK_INVALID_HANDLE)
-        {
-            assert(0); // invalid handles should not be inserted
-            return;
-        }
+        assert(pakId != PAK_INVALID_HANDLE); // invalid handles should not be inserted
 
         g_pakLoadApi->UnloadAsync(pakId);
         handles[i] = PAK_INVALID_HANDLE;
+
+        numHandles--;
     }
 }
 
