@@ -676,7 +676,7 @@ void CBrowser::DrawHostPanel(void)
                 ProcessCommand("BuildAINFile");
             }
 
-            if (ImGui::Button("NavMesh hot swap", ImVec2(contentRegionMax.x, 32)))
+            if (ImGui::Button("Reload NavMesh", ImVec2(contentRegionMax.x, 32)))
             {
                 ProcessCommand("navmesh_hotswap");
             }
