@@ -2241,7 +2241,7 @@ void dtNavMesh::freeHints()
 		dtHint& hint = m_hints[i];
 
 		rdFree(hint.verts);
-		rdFree(hint.triangle);
+		rdFree(hint.tris);
 	}
 
 	rdFree(m_hints);

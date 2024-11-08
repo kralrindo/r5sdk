@@ -415,7 +415,7 @@ struct dtCell
 struct dtHint
 {
 	float* verts;					///< The triangle vertices. [Size: (x, y, z) * dtHint::vertCount]
-	dtTriangleSurface* triangle;	///< The triangles. [Size: dtHint::vertCount]
+	dtTriangleSurface* tris;		///< The triangles. [Size: dtHint::triCount]
 	char unk[24]; // Editor only.
 	int vertCount;					///< The number of vertices in the hint.
 	int triCount;					///< The number of triangles in the hint.
