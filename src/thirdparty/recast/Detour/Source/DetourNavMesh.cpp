@@ -1759,8 +1759,8 @@ bool dtNavMesh::arePolysAdjacent(const dtPolyRef fromRef, const dtPolyRef goalRe
 	return arePolysAdjacent(fromPoly, fromTile, goalPoly, goalTile);
 }
 
-bool dtNavMesh::arePolysAdjacent(const dtPoly* const basePoly, const dtMeshTile* baseTile,
-								 const dtPoly* const landPoly, const dtMeshTile* landTile) const
+bool dtNavMesh::arePolysAdjacent(const dtPoly* const basePoly, const dtMeshTile* const baseTile,
+								 const dtPoly* const landPoly, const dtMeshTile* const landTile) const
 {
 	if (baseTile == landTile)
 	{

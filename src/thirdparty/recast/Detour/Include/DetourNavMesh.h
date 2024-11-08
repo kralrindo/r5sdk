@@ -834,8 +834,8 @@ public:
 	///  @param[in]		landPoly	The second poly.
 	///  @param[in]		landTile	The second tile.
 	/// @return True if both polygons are adjacent by a shared edge.
-	bool arePolysAdjacent(const dtPoly* const basePoly, const dtMeshTile* baseTile,
-		const dtPoly* const landPoly, const dtMeshTile* landTile) const;
+	bool arePolysAdjacent(const dtPoly* const basePoly, const dtMeshTile* const baseTile,
+		const dtPoly* const landPoly, const dtMeshTile* const landTile) const;
 
 	/// Returns whether goal poly is reachable from start poly.
 	///  @param[in]		fromRef		The reference to the start poly.
