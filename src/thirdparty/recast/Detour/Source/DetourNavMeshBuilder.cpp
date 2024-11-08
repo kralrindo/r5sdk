@@ -1310,12 +1310,12 @@ bool dtNavMeshHeaderSwapEndian(unsigned char* data, const int /*dataSize*/)
 
 /// @par
 /// 
-/// This function will remove all polygons marked #DT_UNLINKED_POLY_GROUP from
-/// the tile. Its associated data, such as the detail polygons, links, cells,
-/// etc will also be removed. The BVTree is the only data that needs to be
-/// rebuilt as we have to re-subdivide the bounding volumes with only the
-/// polygons that remain to exist. Off-mesh connections that lack the poly flag
-/// #DT_POLYFLAGS_JUMP_LINKED will also be removed.
+/// This function will remove all disabled polygons marked #DT_UNLINKED_POLY_GROUP
+/// from the tile. Its associated data, such as the detail polygons, links, cells,
+/// etc will also be removed. The BVTree is the only data that needs to be rebuilt
+/// as we have to re-subdivide the bounding volumes with only the polygons that remain
+/// to exist. Off-mesh connections that lack the poly flag #DT_POLYFLAGS_JUMP_LINKED
+/// will also be removed.
 bool dtUpdateNavMeshData(dtNavMesh* nav, const unsigned int tileIndex)
 {
 	dtMeshTile* tile = nav->getTile(tileIndex);
@@ -1346,7 +1346,7 @@ bool dtUpdateNavMeshData(dtNavMesh* nav, const unsigned int tileIndex)
 		const dtPoly& poly = tile->polys[i];
 
 		// Unlinked polygon, drop it.
-		if (poly.groupId == DT_UNLINKED_POLY_GROUP)
+		if (poly.groupId == DT_UNLINKED_POLY_GROUP && (poly.flags & DT_POLYFLAGS_DISABLED))
 			continue;
 
 		const bool isOffMeshConn = poly.getType() == DT_POLYTYPE_OFFMESH_CONNECTION;
@@ -1494,7 +1494,7 @@ bool dtUpdateNavMeshData(dtNavMesh* nav, const unsigned int tileIndex)
 		const dtPoly& poly = tile->polys[cell.polyIndex];
 
 		// Don't copy cells residing on dead polygons.
-		if (poly.groupId == DT_UNLINKED_POLY_GROUP)
+		if (poly.groupId == DT_UNLINKED_POLY_GROUP && (poly.flags & DT_POLYFLAGS_DISABLED))
 			continue;
 
 		CellItem& newCell = cellItems[numCellsKept++];
@@ -1586,9 +1586,11 @@ bool dtUpdateNavMeshData(dtNavMesh* nav, const unsigned int tileIndex)
 		const dtPoly& ip = tile->polys[oldPolyIdMap[i]];
 		dtPoly& p = navPolys[i];
 
-		rdAssert(ip.groupId != DT_UNLINKED_POLY_GROUP);
+		// Unlinked and disabled polygons should not reach this stage.
+		rdAssert(!(ip.groupId == DT_UNLINKED_POLY_GROUP && (ip.flags & DT_POLYFLAGS_DISABLED)));
+		const bool nullLink = ip.firstLink == DT_NULL_LINK;
 
-		p.firstLink = newLinkIdMap[ip.firstLink];
+		p.firstLink = nullLink ? DT_NULL_LINK : newLinkIdMap[ip.firstLink];
 		p.flags = ip.flags;
 		p.vertCount = ip.vertCount;
 		p.areaAndtype = ip.areaAndtype;
