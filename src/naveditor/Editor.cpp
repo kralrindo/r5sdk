@@ -453,7 +453,7 @@ void Editor::handleCommonSettings()
 	ImGui::SliderInt("Verts Per Poly", &m_vertsPerPoly, 3, 6);
 
 #if DT_NAVMESH_SET_VERSION >= 8
-	ImGui::SliderInt("Poly Cell Resolution", &m_polyCellRes, 1, 128);
+	ImGui::SliderInt("Poly Cell Resolution", &m_polyCellRes, 0, 128);
 #endif
 
 	ImGui::Separator();
