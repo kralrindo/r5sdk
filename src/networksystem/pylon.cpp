@@ -15,7 +15,8 @@
 //-----------------------------------------------------------------------------
 // Console variables
 //-----------------------------------------------------------------------------
-ConVar pylon_matchmaking_hostname("pylon_matchmaking_hostname", "ms.r5reloaded.com", FCVAR_RELEASE | FCVAR_ACCESSIBLE_FROM_THREADS, "Holds the pylon matchmaking hostname");
+ConVar pylon_matchmaking_enabled("pylon_matchmaking_enabled", "1", FCVAR_RELEASE | FCVAR_ACCESSIBLE_FROM_THREADS, "Whether to use the pylon matchmaking server");
+ConVar pylon_matchmaking_hostname("pylon_matchmaking_hostname", "r5r.org", FCVAR_RELEASE | FCVAR_ACCESSIBLE_FROM_THREADS, "Holds the pylon matchmaking hostname");
 ConVar pylon_host_update_interval("pylon_host_update_interval", "5", FCVAR_RELEASE | FCVAR_ACCESSIBLE_FROM_THREADS, "Length of time in seconds between each status update interval to master server", true, 5.f, false, 0.f);
 ConVar pylon_showdebuginfo("pylon_showdebuginfo", "0", FCVAR_RELEASE | FCVAR_ACCESSIBLE_FROM_THREADS, "Shows debug output for pylon");
 
@@ -52,6 +53,12 @@ static bool GetServerListingFromJSON(const rapidjson::Value& value, NetGameServe
 //-----------------------------------------------------------------------------
 bool CPylon::GetServerList(vector<NetGameServer_t>& outServerList, string& outMessage) const
 {
+    if (!IsEnabled())
+    {
+        SetDisabledMessage(outMessage);
+        return false;
+    }
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
     requestJson.AddMember("version", SDK_VERSION, requestJson.GetAllocator());
@@ -104,6 +111,12 @@ bool CPylon::GetServerList(vector<NetGameServer_t>& outServerList, string& outMe
 bool CPylon::GetServerByToken(NetGameServer_t& outGameServer,
     string& outMessage, const string& token) const
 {
+    if (!IsEnabled())
+    {
+        SetDisabledMessage(outMessage);
+        return false;
+    }
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
 
@@ -148,6 +161,12 @@ bool CPylon::GetServerByToken(NetGameServer_t& outGameServer,
 //-----------------------------------------------------------------------------
 bool CPylon::PostServerHost(string& outMessage, string& outToken, string& outHostIp, const NetGameServer_t& netGameServer) const
 {
+    if (!IsEnabled())
+    {
+        SetDisabledMessage(outMessage);
+        return false;
+    }
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
 
@@ -204,11 +223,14 @@ bool CPylon::PostServerHost(string& outMessage, string& outToken, string& outHos
 //-----------------------------------------------------------------------------
 // Purpose: Checks a list of clients for their banned status.
 // Input  : &inBannedVec - 
-//			&outBannedVec  - 
+//			**outBannedVec  - allocated; caller is responsible for freeing it
 // Output : True on success, false otherwise.
 //-----------------------------------------------------------------------------
-bool CPylon::GetBannedList(const CBanSystem::BannedList_t& inBannedVec, CBanSystem::BannedList_t& outBannedVec) const
+bool CPylon::GetBannedList(const CBanSystem::BannedList_t& inBannedVec, CBanSystem::BannedList_t** outBannedVec) const
 {
+    if (!IsEnabled())
+        return false;
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
 
@@ -249,16 +271,22 @@ bool CPylon::GetBannedList(const CBanSystem::BannedList_t& inBannedVec, CBanSyst
 
     const rapidjson::Value::ConstArray bannedPlayers = bannedPlayersIt->value.GetArray();
 
-    for (const rapidjson::Value& obj : bannedPlayers)
+    if (!bannedPlayers.Empty())
     {
-        const char* reason = nullptr;
-        JSON_GetValue(obj, "reason", JSONFieldType_e::kString, reason);
+        *outBannedVec = new CBanSystem::BannedList_t();
+        Assert(*outBannedVec);
 
-        NucleusID_t nuc = NULL;
-        JSON_GetValue(obj, "id", JSONFieldType_e::kUint64, nuc);
+        for (const rapidjson::Value& obj : bannedPlayers)
+        {
+            const char* reason = nullptr;
+            JSON_GetValue(obj, "reason", JSONFieldType_e::kString, reason);
 
-        CBanSystem::Banned_t banned(reason ? reason : "#DISCONNECT_BANNED", nuc);
-        outBannedVec.AddToTail(banned);
+            NucleusID_t nuc = NULL;
+            JSON_GetValue(obj, "id", JSONFieldType_e::kUint64, nuc);
+
+            CBanSystem::Banned_t banned(reason ? reason : "#DISCONNECT_BANNED", nuc);
+            (*outBannedVec)->AddToTail(banned);
+        }
     }
 
     return true;
@@ -273,6 +301,12 @@ bool CPylon::GetBannedList(const CBanSystem::BannedList_t& inBannedVec, CBanSyst
 //-----------------------------------------------------------------------------
 bool CPylon::CheckForBan(const string& ipAddress, const uint64_t nucleusId, const string& personaName, string& outReason) const
 {
+    if (!IsEnabled())
+    {
+        SetDisabledMessage(outReason);
+        return false;
+    }
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
 
@@ -322,6 +356,12 @@ bool CPylon::CheckForBan(const string& ipAddress, const uint64_t nucleusId, cons
 bool CPylon::AuthForConnection(const uint64_t nucleusId, const char* ipAddress,
     const char* authCode, string& outToken, string& outMessage) const
 {
+    if (!IsEnabled())
+    {
+        SetDisabledMessage(outMessage);
+        return false;
+    }
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
 
@@ -359,6 +399,12 @@ bool CPylon::AuthForConnection(const uint64_t nucleusId, const char* ipAddress,
 //-----------------------------------------------------------------------------
 bool CPylon::GetEULA(MSEulaData_t& outData, string& outMessage) const
 {
+    if (!IsEnabled())
+    {
+        SetDisabledMessage(outMessage);
+        return false;
+    }
+
     rapidjson::Document requestJson;
     requestJson.SetObject();
 
@@ -596,6 +642,22 @@ void CPylon::LogBody(const rapidjson::Document& responseJson) const
 
     JSON_DocumentToBufferDeserialize(responseJson, stringBuffer);
     Msg(eDLL_T::ENGINE, "\n%s\n", stringBuffer.GetString());
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: Returns whether the pylon matchmaking system is enabled.
+//-----------------------------------------------------------------------------
+bool CPylon::IsEnabled() const
+{
+    return pylon_matchmaking_enabled.GetBool();
+}
+
+//-----------------------------------------------------------------------------
+// Purpose: If the system is disabled, this will be the default reason message.
+//-----------------------------------------------------------------------------
+void CPylon::SetDisabledMessage(string& outMsg) const
+{
+    outMsg = "matchmaking disabled";
 }
 
 ///////////////////////////////////////////////////////////////////////////////

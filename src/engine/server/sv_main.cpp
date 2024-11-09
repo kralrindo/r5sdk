@@ -52,8 +52,10 @@ void SV_CheckForBanAndDisconnect(CClient* const pClient, const string& svIPAddr,
 //-----------------------------------------------------------------------------
 void SV_ProcessBulkCheck(const CBanSystem::BannedList_t* const pBannedVec)
 {
-	CBanSystem::BannedList_t* const outBannedVec = new CBanSystem::BannedList_t();
-	g_MasterServer.GetBannedList(*pBannedVec, *outBannedVec);
+	CBanSystem::BannedList_t* outBannedVec = nullptr;
+
+	if (!g_MasterServer.GetBannedList(*pBannedVec, &outBannedVec))
+		return;
 
 	g_TaskQueue.Dispatch([outBannedVec]
 		{
