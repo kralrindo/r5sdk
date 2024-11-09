@@ -250,7 +250,17 @@ void Systems_Init()
 
 #ifdef DEDICATED
 	InitCommandLineParameters();
-#endif // DEDICATED
+#else
+	// Must append these here if user specified the -offline parameter so the
+	// engine can take care of disabling the platform systems on time. The
+	// dedicated server already has these disabled, so we don't need to check
+	// for it here.
+	if (CommandLine()->CheckParm("-offline"))
+	{
+		CommandLine()->AppendParm("-noorigin", "");
+		CommandLine()->AppendParm("-nodiscord", "");
+	}
+#endif// DEDICATED
 
 	// Script context registration callbacks.
 	ScriptConstantRegister_Callback = ScriptConstantRegistrationCallback;

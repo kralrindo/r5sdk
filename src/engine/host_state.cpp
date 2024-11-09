@@ -421,6 +421,10 @@ void CHostState::LoadConfig(void) const
 			Cbuf_AddText(Cbuf_GetCurrentPlayer(), "exec tools/rcon_client_dev.cfg\n", cmd_source_t::kCommandSrcCode);
 #endif // !DEDICATED
 		}
+		if (CommandLine()->CheckParm("-offline"))
+		{
+			Cbuf_AddText(Cbuf_GetCurrentPlayer(), "exec system/autoexec_offline.cfg\n", cmd_source_t::kCommandSrcCode);
+		}
 #ifndef CLIENT_DLL
 		Cbuf_AddText(Cbuf_GetCurrentPlayer(), "exec liveapi.cfg\n", cmd_source_t::kCommandSrcCode);
 #endif //!CLIENT_DLL
